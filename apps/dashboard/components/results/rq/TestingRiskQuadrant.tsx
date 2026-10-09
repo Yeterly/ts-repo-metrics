@@ -107,7 +107,17 @@ function cell(position: QuadrantPosition, active: QuadrantPosition, roomy: boole
         ? "border border-[rgba(34,197,94,0.3)] bg-[rgba(34,197,94,0.08)]"
         : position === "bl"
           ? "border border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.15)]"
-          : "border border-[#eab308] bg-[rgba(234,179,8,0.15)]";
+          : "border border-[rgba(234,179,8,0.3)] bg-[rgba(234,179,8,0.15)]";
+
+  const badge = isIdeal ? (isHere ? "Ideal · You are here" : "Ideal") : isHere ? "You are here" : null;
+  const badgeClass =
+    position === "tl"
+      ? "border-[#a1a1a1] bg-[rgba(161,161,161,0.15)] text-[#fafafa]"
+      : position === "tr"
+        ? "border-[#22c55e] bg-[rgba(34,197,94,0.15)] text-[#22c55e]"
+        : position === "bl"
+          ? "border-[#ef4444] bg-[rgba(239,68,68,0.15)] text-[#ef4444]"
+          : "border-[#eab308] bg-[rgba(234,179,8,0.15)] text-[#eab308]";
 
   const titleClass =
     position === "tr"
@@ -130,24 +140,15 @@ function cell(position: QuadrantPosition, active: QuadrantPosition, roomy: boole
       )}
     >
       <div className="flex flex-wrap items-center gap-2">
-        {isIdeal ? (
+        {badge ? (
           <span
             className={cn(
-              "inline-flex h-[22px] items-center rounded-full border border-[#22c55e] bg-[rgba(34,197,94,0.15)] px-2",
-              "text-[11px] font-medium leading-none text-[#22c55e]",
+              "inline-flex h-[22px] items-center rounded-full border px-2",
+              "text-[11px] font-medium leading-none",
+              badgeClass,
             )}
           >
-            Ideal
-          </span>
-        ) : null}
-        {isHere && !isIdeal ? (
-          <span
-            className={cn(
-              "inline-flex h-[22px] items-center rounded-full border border-[#eab308] bg-[rgba(234,179,8,0.15)] px-2",
-              "text-[11px] font-medium leading-none text-[#eab308]",
-            )}
-          >
-            You are here
+            {badge}
           </span>
         ) : null}
       </div>
