@@ -247,6 +247,15 @@ export async function analyzeRepo(
       continue;
     }
 
+    const relFile = path.relative(repoPath, filePath).replace(/\\/g, "/");
+    const isTest = isTestFilePath(relFile);
+    // Test code counts toward test LOC only. Its repetitive callbacks would
+    // otherwise inflate Halstead volume and drag down MI (#253).
+    if (isTest) {
+      languageSummaries.addTestFile(languageBucketForPath(filePath), countLines(code));
+      continue;
+    }
+
     let tree;
     try {
       tree = parseSource(code, grammarForFile(filePath));
@@ -258,7 +267,6 @@ export async function analyzeRepo(
 
     const langProfile = languageProfileForPath(filePath);
     const fnCount = countFunctions(tree.rootNode, langProfile);
-    const relFile = path.relative(repoPath, filePath).replace(/\\/g, "/");
     const inReactScope = computeInReactScope(relFile, tree.rootNode);
     const fnMetrics = extractFunctionMetrics(tree.rootNode, {
       relativeFilePath: relFile,
@@ -279,10 +287,8 @@ export async function analyzeRepo(
       }
     }
     const fileSmells = detectSmells(tree.rootNode, langProfile);
-    const isTest = isTestFilePath(relFile);
     languageSummaries.add(languageBucketForPath(filePath), {
       loc: countLines(code),
-      isTest,
       functions: fnMetrics.functions,
       smells: fileSmells,
     });
@@ -292,7 +298,7 @@ export async function analyzeRepo(
       pythonMetrics.addFile(fnMetrics.functions, moduleScope);
       collectPythonImports(tree.rootNode, pythonImports);
       silentFailureEvents.push(...extractPythonSilentFailures(tree.rootNode, relFile));
-      if (!isTest) endpoints.push(...extractEndpoints(tree.rootNode, relFile));
+      endpoints.push(...extractEndpoints(tree.rootNode, relFile));
     }
 
     totalFunctions += fnCount.total;
@@ -345,7 +351,7 @@ export async function analyzeRepo(
   );
   const maintainability = computeMaintainabilityIndex(
     complexitySummary.average,
-    profile.totalLOC,
+    profile.sourceLOC,
     functionMetricsSummary.averageLength,
   );
   const testCoverageProxy = computeTestCoverageProxy(profile);
