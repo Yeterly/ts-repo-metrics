@@ -52,7 +52,7 @@ import {
 } from "../extract/react/extractReactMetrics.js";
 import { extractSilentFailures } from "../extract/silentFailures.js";
 import { computeSymbolVerificationRisks } from "../extract/symbolVerificationRisk.js";
-import { isTestFilePath, LONG_FUNCTION_THRESHOLD } from "../utils/constants.js";
+import { HIGH_COMPLEXITY_THRESHOLD, isTestFilePath, LONG_FUNCTION_THRESHOLD } from "../utils/constants.js";
 import {
   isPythonSourcePath,
   languageBucketForPath,
@@ -179,6 +179,7 @@ async function buildSkippedFrameworkReport(
       emptyCatchBlocks: 0,
       consoleLogs: 0,
     },
+    highComplexityOrLongFunctions: 0,
     maintainability,
     testCoverageProxy,
     duplication: null,
@@ -337,6 +338,10 @@ export async function analyzeRepo(
       : 0,
   };
 
+  const highComplexityOrLongFunctions = allFunctionDetails.filter(
+    (f) => f.cyclomaticComplexity > HIGH_COMPLEXITY_THRESHOLD || f.lines > LONG_FUNCTION_THRESHOLD,
+  ).length;
+
   const complexitySummary = summarizeComplexity(allComplexities);
   const distributions = computeDistributions(
     allFunctionDetails,
@@ -430,6 +435,7 @@ export async function analyzeRepo(
     functionMetricsSummary,
     complexity: complexitySummary,
     smells: totalSmells,
+    highComplexityOrLongFunctions,
     maintainability,
     testCoverageProxy,
     duplication,
