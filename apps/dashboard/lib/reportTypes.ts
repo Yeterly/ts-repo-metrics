@@ -295,6 +295,8 @@ export interface RepoReport {
     emptyCatchBlocks: number;
     consoleLogs: number;
   };
+  /** Functions that are high-complexity, long, or both, each counted once; absent in older reports. */
+  highComplexityOrLongFunctions?: number;
   /** Null when `analysisSkipped` is set. */
   maintainability?: { score: number; classification: string } | null;
   testCoverageProxy?: { ratio: number; classification: string };

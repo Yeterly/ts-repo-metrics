@@ -102,7 +102,8 @@ export function TestingMetricsTab({ report, scopeId, onScopeIdChange, onOpenCode
   const { riskIndex, verificationIndex, riskLabel, verificationLabel } = useMemo(() => {
     const highComplexityCount = complexity?.highComplexityFunctions ?? 0;
     const longFunctionCount = smells?.longFunctions ?? 0;
-    const riskRaw = highComplexityCount + longFunctionCount;
+    // Older reports don't have the distinct count, so they keep the old sum.
+    const riskRaw = report.highComplexityOrLongFunctions ?? highComplexityCount + longFunctionCount;
     const riskIndex = Math.min(1, riskRaw / 20);
     const verificationIndex = Math.min(1, testLocRatioForQuadrant * 5);
     const riskLabel: "Low" | "High" = riskRaw >= 10 ? "High" : "Low";
@@ -113,7 +114,7 @@ export function TestingMetricsTab({ report, scopeId, onScopeIdChange, onOpenCode
       riskLabel,
       verificationLabel,
     };
-  }, [complexity?.highComplexityFunctions, smells?.longFunctions, testLocRatioForQuadrant]);
+  }, [complexity?.highComplexityFunctions, smells?.longFunctions, report.highComplexityOrLongFunctions, testLocRatioForQuadrant]);
 
   const cardProps = { metricCategory: "testing" as const, hideResearchBadge: true };
   const teamOnly = mv.mode === "team";
@@ -401,6 +402,7 @@ export function TestingMetricsTab({ report, scopeId, onScopeIdChange, onOpenCode
           structuralRiskSignals={{
             highComplexityFunctions: complexity?.highComplexityFunctions ?? 0,
             longFunctions: smells?.longFunctions ?? 0,
+            highComplexityOrLongFunctions: report.highComplexityOrLongFunctions,
           }}
           testLocShare={testLocRatioForQuadrant}
         />
