@@ -123,7 +123,9 @@ export function TestingMetricsTab({ report, scopeId, onScopeIdChange, onOpenCode
       ? "Among this author's commits, the fraction whose subjects match refactor-style keywords."
       : "Commits whose subject matches refactor-style keywords.";
   const locSnapshotTooltip =
-    "Counted across the entire repository snapshot (not split by contributor).";
+    isPrScopedReport(report)
+      ? "Counted across the files in this pull request (not split by contributor)."
+      : "Counted across the entire repository snapshot (not split by contributor).";
   const gitChurnTooltip =
     "Sum of lines added + deleted (git numstat) on paths in this author’s commits, split by test vs non-test file patterns—historical churn, not current tree size.";
 
@@ -403,6 +405,7 @@ export function TestingMetricsTab({ report, scopeId, onScopeIdChange, onOpenCode
             longFunctions: smells?.longFunctions ?? 0,
           }}
           testLocShare={testLocRatioForQuadrant}
+          prScoped={isPrScopedReport(report)}
         />
       </section>
 

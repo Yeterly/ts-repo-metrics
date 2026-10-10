@@ -29,6 +29,8 @@ interface TestingRiskQuadrantProps {
   };
   /** Snapshot test LOC ÷ source LOC (0–1), same basis as verification score. */
   testLocShare?: number;
+  /** True when the report covers only the files in one pull request */
+  prScoped?: boolean;
 }
 
 const QUADRANT_COPY: Record<
@@ -169,6 +171,7 @@ interface TestingRiskQuadrantInnerProps {
     longFunctions: number;
   };
   testLocShare?: number;
+  prScoped?: boolean;
   roomy: boolean;
   headerTrailing: ReactNode;
 }
@@ -188,6 +191,7 @@ function TestingRiskQuadrantInner({
   structuralRiskSignals,
   testLocShare,
   roomy,
+  prScoped,
   headerTrailing,
 }: TestingRiskQuadrantInnerProps) {
   const active = activePosition(riskLabel, verificationLabel);
@@ -216,7 +220,8 @@ function TestingRiskQuadrantInner({
   const verificationFootnote =
     sharePct != null ? (
       <p className="mt-1.5 text-[11px] font-normal leading-snug text-[#737373]">
-        Test code is <span className="tabular-nums text-[#a1a1a1]">{sharePct}%</span> of source LOC (repo snapshot).
+        Test code is <span className="tabular-nums text-[#a1a1a1]">{sharePct}%</span> of source LOC
+        ({prScoped ? "files in this PR" : "repo snapshot"}).
         Score is 5× that share, capped at 100% (reaches max when test share is at least 20%).
       </p>
     ) : null;
@@ -358,6 +363,7 @@ export function TestingRiskQuadrant({
   wholeRepositoryNote = false,
   structuralRiskSignals,
   testLocShare,
+  prScoped,
 }: TestingRiskQuadrantProps) {
   const [fullOpen, setFullOpen] = useState(false);
 
@@ -370,6 +376,7 @@ export function TestingRiskQuadrant({
     verificationLabel,
     structuralRiskSignals,
     testLocShare,
+    prScoped,
     roomy: false,
     headerTrailing: (
       <Button
@@ -409,6 +416,7 @@ export function TestingRiskQuadrant({
               verificationLabel={verificationLabel}
               structuralRiskSignals={structuralRiskSignals}
               testLocShare={testLocShare}
+              prScoped={prScoped}
               roomy
               headerTrailing={null}
             />
