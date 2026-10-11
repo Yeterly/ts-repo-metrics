@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { RepoReport } from "@/lib/reportTypes";
+import { isPrScopedReport } from "@/lib/analysisScope";
 import type { TestingScopeMetricValues } from "@/lib/testingScopeMetrics";
 import {
   findContributorForScope,
@@ -104,6 +105,7 @@ export function TestingCoreSignalsSection({
 
   const churnSharePct = Math.min(100, Math.max(0, Math.round(mv.testLocRatio * 100)));
   const snapshotSharePct = churnSharePct;
+  const prScoped = isPrScopedReport(report);
 
   // Test LOC ÷ source LOC. Not line coverage, so the title avoids "coverage".
   const ratioTitle = fromGitChurn ? "Test churn share" : "Test-to-source LOC";
@@ -117,9 +119,9 @@ export function TestingCoreSignalsSection({
       return `Only about ${churnSharePct}% of this author’s line churn is on test paths. Aim to raise the share of test-path edits as features stabilize—same threshold idea as snapshot test/source ratio, but from numstat history.`;
     }
     if (ratioTier === "strong" || ratioTier === "good") {
-      return `Test code is about ${snapshotSharePct}% of source in the snapshot—within a healthy band for this proxy. Keep pairing new features with tests so the ratio does not slip.`;
+      return `Test code is about ${snapshotSharePct}% of source ${prScoped ? "across the files in this PR" : "in the snapshot"}—within a healthy band for this proxy. Keep pairing new features with tests so the ratio does not slip.`;
     }
-    return `Test code is ${snapshotSharePct}% of source in the snapshot. Many teams aim for roughly 20–30% by LOC proxy; growing test files alongside features closes the gap.`;
+    return `Test code is ${snapshotSharePct}% of source ${prScoped ? "across the files in this PR" : "in the snapshot"}. Many teams aim for roughly 20–30% by LOC proxy; growing test files alongside features closes the gap.`;
   })();
 
   const commitsDescription = (() => {
@@ -158,9 +160,9 @@ export function TestingCoreSignalsSection({
       return "No test files matched the analyzer’s patterns yet. Add a first spec or test module so verification has a foothold in the tree.";
     }
     if (filesTier === "needs_work" || filesTier === "critical") {
-      return `Only ${mv.testFiles} test file${mv.testFiles === 1 ? "" : "s"} on the snapshot. Add tests alongside new features so the count keeps pace with your source code.`;
+      return `Only ${mv.testFiles} test file${mv.testFiles === 1 ? "" : "s"} ${prScoped ? "in this PR" : "on the snapshot"}. Add tests alongside new features so the count keeps pace with your source code.`;
     }
-    return `You have ${mv.testFiles} test file${mv.testFiles === 1 ? "" : "s"} on the snapshot—keep adding tests as you ship so this count tracks code growth.`;
+    return `You have ${mv.testFiles} test file${mv.testFiles === 1 ? "" : "s"} ${prScoped ? "in this PR" : "on the snapshot"}—keep adding tests as you ship so this count tracks code growth.`;
   })();
 
   return (
