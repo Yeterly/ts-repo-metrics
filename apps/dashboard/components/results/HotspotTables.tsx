@@ -26,6 +26,7 @@ import {
 import { FileDetailSheet } from "./FileDetailSheet";
 import { SeverityTableCell } from "./SeverityTableCell";
 import { fileStats } from "@/lib/perFileStats";
+import { isPrScopedReport } from "@/lib/analysisScope";
 import type { RepoReport, FunctionDetail, FunctionComplexity, PerFileEntry } from "@/lib/reportTypes";
 import {
   UI_COMPLEXITY_CRITICAL_GT,
@@ -123,7 +124,7 @@ export function HotspotTables({ report }: HotspotTablesProps) {
               <div className="min-w-0 space-y-1">
                 <CardTitle className="text-lg">Top Complexity Hotspots</CardTitle>
                 <p className="text-sm text-muted-foreground leading-snug max-w-2xl">
-                  These are the highest-risk functions in your codebase. Start here when refactoring.
+                  These are the highest-risk functions in {isPrScopedReport(report) ? "this pull request's files" : "your codebase"}. Start here when refactoring.
                 </p>
               </div>
               <p className="text-xs text-muted-foreground shrink-0 sm:pt-1 sm:text-right sm:max-w-[200px]">

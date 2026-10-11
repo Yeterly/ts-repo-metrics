@@ -9,6 +9,7 @@ import {
   type Phase2FunctionRow,
 } from "@/lib/phase2Summary";
 import type { RepoReport, FunctionDetail } from "@/lib/reportTypes";
+import { isPrScopedReport } from "@/lib/analysisScope";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -226,7 +227,7 @@ export function Phase2ComplexityTab({ report, onOpenCodeQualityTab }: Phase2Comp
         showReact={showReact}
         onOpenDeepDive={setDeepDive}
       />
-      <Phase2CodeComplexityCoreSignals summary={summary} onOpenDeepDive={setDeepDive} />
+      <Phase2CodeComplexityCoreSignals summary={summary} onOpenDeepDive={setDeepDive} prScoped={isPrScopedReport(report)} />
       <Phase2AdditionalSignalsSection summary={summary} showReact={showReact} />
       <Phase2TopComplexityOutliersTable
         sortedOutliers={sortedOutliers}

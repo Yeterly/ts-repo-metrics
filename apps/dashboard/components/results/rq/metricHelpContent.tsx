@@ -35,12 +35,12 @@ export function FormulaBox({ children }: { children: ReactNode }) {
 /* CodeQuality — structural / hygiene                                           */
 /* ------------------------------------------------------------------ */
 
-export function CodeQualityMaintainabilityScoreBody() {
+export function CodeQualityMaintainabilityScoreBody({ prScoped }: { prScoped?: boolean }) {
   return (
     <>
       <HelpSection title="What it measures">
         <p>
-          A single repo-level <strong>maintainability index</strong> on a 0–100 scale. Higher values
+          A single {prScoped ? "pull-request-level" : "repo-level"} <strong>maintainability index</strong> on a 0–100 scale. Higher values
           suggest relatively easier maintenance given average complexity, size, and function length.
           This is <strong>not</strong> the per-function GRAD-AI MI in the Code Complexity full function listing.
         </p>
@@ -71,12 +71,12 @@ export function CodeQualityMaintainabilityScoreBody() {
   );
 }
 
-export function CodeQualityMaintainabilityClassBody() {
+export function CodeQualityMaintainabilityClassBody({ prScoped }: { prScoped?: boolean }) {
   return (
     <>
       <HelpSection title="What it measures">
         <p>
-          A discrete band for the repo-level maintainability score, for quick scanning (low /
+          A discrete band for {prScoped ? "the pull request's" : "the repo-level"} maintainability score, for quick scanning (low /
           moderate / high).
         </p>
       </HelpSection>
@@ -715,20 +715,22 @@ export function CommitHabitsEntropyBody() {
   );
 }
 
-export function CommitHabitsDuplicationPercentBody() {
+export function CommitHabitsDuplicationPercentBody({ prScoped }: { prScoped?: boolean }) {
   return (
     <>
       <HelpSection title="What it measures">
         <p>
-          The fraction of duplicated lines found by <strong>jscpd</strong> clone detection across this
-          repository. One number describes the codebase as a whole—use it alongside git habits to spot
+          The fraction of duplicated lines found by <strong>jscpd</strong> clone detection across{" "}
+          {prScoped ? "the files in this pull request" : "this repository"}. One number describes{" "}
+          {prScoped ? "those files" : "the codebase"} as a whole—use it alongside git habits to spot
           change quality or repetition.
         </p>
       </HelpSection>
       <HelpSection title="How it is calculated">
         <p>
           Aggregate duplicated-line percentage from jscpd (same methodology as elsewhere in this
-          dashboard). Not derived from git author identity; it stays a <strong>repository-level</strong>{" "}
+          dashboard). Not derived from git author identity; it stays a{" "}
+          <strong>{prScoped ? "pull-request-level" : "repository-level"}</strong>{" "}
           snapshot.
         </p>
       </HelpSection>
