@@ -13,7 +13,7 @@ How it works:
 
 1. A student signs in to job191.yeterly.ai and clicks **Connect GitHub**. GitHub only confirms their username.
 2. One member of each team installs the app on the team's repository.
-3. When a student adds a pull request, the server checks that the app is installed on that repository and that the student's GitHub account is a collaborator on it. Then it reads the pull request with a short-lived, read-only token scoped to that one repository.
+3. When a student adds a pull request, the server checks that the app is installed on that repository and that the student's GitHub account has write access to it. Then it reads the pull request with a short-lived, read-only token scoped to that one repository.
 
 Part 1 is done once by course staff. Part 4 is the student guide; share it with the class.
 
@@ -45,7 +45,7 @@ You need to be an owner of the Yeterly GitHub organization.
    | Repository | Pull requests | Read-only | The pull request, its commits, files and review comments |
    | Repository | Checks | Read-only | CI results on the merge commit |
    | Repository | Commit statuses | Read-only | CI results reported as statuses |
-   | Repository | Metadata | Read-only | Required by GitHub; also used to check a student is a collaborator |
+   | Repository | Metadata | Read-only | Required by GitHub; also used to check a student has write access |
    | Account | Email addresses | Read-only | Supabase reads the email of the GitHub account when a student connects it |
 
 7. **Where can this GitHub App be installed?** Choose **Any account**. Student teams keep their repositories in their own accounts or organizations, not in Yeterly's.
@@ -120,7 +120,7 @@ Each team does this **once**, and only **one** team member needs to do it. That 
 1. Sign in at **https://job191.yeterly.ai/dashboard** and join the course with the course code.
 2. Click **Connect GitHub** and approve. GitHub only shares your username with Job191; this step gives no access to your repositories.
 
-Every team member who submits pull requests must also be a **collaborator** on the team repository (or a member of the organization team that has access to it). Otherwise the site cannot tell the pull requests are yours.
+Every team member who submits pull requests must also have **write access** to the team repository: added as a collaborator, or a member of an organization team with write access. You need it anyway to push your task branches. The site checks it to make sure students only submit from their own team's repository.
 
 ### Step 2: Install the app (one team member)
 
@@ -139,7 +139,7 @@ Paste each merged task pull request link on the dashboard and click **Add PR**. 
 | Message | What to do |
 | --- | --- |
 | *The Job191 GitHub App is not installed on team/repo* | Do Step 2, or ask your organization owner to approve the request. |
-| *Your GitHub account @name is not a collaborator on team/repo* | Ask the repository owner to add you: repository **Settings** → **Collaborators** → **Add people**. Or check you connected the right GitHub account. |
+| *Your GitHub account @name cannot push to team/repo* | Ask the repository owner to give you write access: repository **Settings** → **Collaborators** (or **Collaborators and teams**) → **Add people**, with the *Write* role. Or check you connected the right GitHub account. |
 | *Connect GitHub before submitting* | Do Step 1. |
 | *GitHub access is not set up on this site yet* | Tell your instructor (Part 3 is incomplete). |
 

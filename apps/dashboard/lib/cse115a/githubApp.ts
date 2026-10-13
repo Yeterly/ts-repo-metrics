@@ -7,7 +7,7 @@ import { githubReader, type GitHubReader } from "@/lib/cse115a/githubClient";
 // Course repository access through the course's GitHub App. Each team installs the app on its own
 // repository with read-only permissions; the server reads that repository with a short-lived
 // installation token. Students only link their GitHub account to prove who they are, and may read
-// a repository only when that account is a collaborator on it. No student GitHub token is stored.
+// a repository only when that account can push to it. No student GitHub token is stored.
 
 const API = "https://api.github.com";
 const HEADERS = { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
@@ -87,7 +87,12 @@ export async function repoInstallationToken(
   return token;
 }
 
-/** An installation token for the repository, after checking the student's linked GitHub account is a collaborator on it. */
+/**
+ * An installation token for the repository, after checking the student's linked GitHub account can push to it.
+ * Write access is the test: every team member needs it to push task branches, while on a public repository
+ * anyone can read. The permission endpoint counts organization owners and team members; GitHub's plain
+ * collaborator check, with an installation token, only counts people added to the repository directly.
+ */
 export async function courseRepoToken(
   githubLogin: string | null, owner: string, repo: string,
   config: GitHubAppConfig | null = githubAppConfig(), fetchImpl: Fetch = fetch,
@@ -95,17 +100,16 @@ export async function courseRepoToken(
   if (!githubLogin) throw new CourseRepoAccessError("Connect GitHub first, so we can check you are on this repository’s team.", "github_not_linked");
   const token = await repoInstallationToken(owner, repo, config, fetchImpl);
   const response = await fetchImpl(
-    `${API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/collaborators/${encodeURIComponent(githubLogin)}`,
+    `${API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/collaborators/${encodeURIComponent(githubLogin)}/permission`,
     { headers: { ...HEADERS, Authorization: `Bearer ${token}` }, cache: "no-store" },
   );
-  if (response.status === 204) return token;
-  if (response.status === 404) {
-    throw new CourseRepoAccessError(
-      `Your GitHub account @${githubLogin} is not a collaborator on ${owner}/${repo}. Submit pull requests from your own team’s repository.`,
-      "github_not_collaborator",
-    );
-  }
-  throw new Error(`GitHub could not check your access to ${owner}/${repo} (${response.status}).`);
+  if (!response.ok && response.status !== 404) throw new Error(`GitHub could not check your access to ${owner}/${repo} (${response.status}).`);
+  const permission = response.ok ? (await response.json() as { permission?: string }).permission : null;
+  if (permission === "admin" || permission === "write") return token;
+  throw new CourseRepoAccessError(
+    `Your GitHub account @${githubLogin} cannot push to ${owner}/${repo}. Submit pull requests from your own team’s repository, and ask its owner to give you write access.`,
+    "github_not_collaborator",
+  );
 }
 
 /** A GitHub reader for `/repos/{owner}/{repo}/...` paths that uses the right repository's token, checking access once per repository. */
