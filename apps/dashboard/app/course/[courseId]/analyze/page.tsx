@@ -23,7 +23,12 @@ import {
   stashOAuthNextPath,
   stashOAuthProvider,
 } from "@/lib/oauthRedirectOrigin";
-import { verifiedUcscGoogleEmail } from "@/lib/courseUcscAuth";
+import { COURSE_SHORT_NAME, COURSE_UNIVERSITY, courseAllowedDomains, courseGoogleHostedDomain, verifiedUcscGoogleEmail } from "@/lib/courseUcscAuth";
+
+// Client bundles only see NEXT_PUBLIC_* variables. Admins are not exposed here; the server still accepts them.
+const PUBLIC_COURSE_ENV = { CSE115A_ALLOWED_EMAIL_DOMAINS: process.env.NEXT_PUBLIC_CSE115A_ALLOWED_EMAIL_DOMAINS } as unknown as NodeJS.ProcessEnv;
+const PUBLIC_HOSTED_DOMAIN = courseGoogleHostedDomain(PUBLIC_COURSE_ENV);
+const PUBLIC_DOMAINS_LABEL = courseAllowedDomains(PUBLIC_COURSE_ENV).map((domain) => `@${domain}`).join(" or ");
 
 type DashboardProfile = {
   login: string;
@@ -196,7 +201,7 @@ export default function CourseAnalyzePage() {
       const supabase = createUserSupabaseBrowserClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (cancelled) return;
-      const email = verifiedUcscGoogleEmail(user);
+      const email = verifiedUcscGoogleEmail(user, PUBLIC_COURSE_ENV);
       setUcscEmail(email);
       setCourseAuthStatus(email ? "ready" : "needs_google");
       if (email && step === 3) void loadDashboard();
@@ -218,7 +223,7 @@ export default function CourseAnalyzePage() {
       stashOAuthProvider("google");
       const options = {
         redirectTo: buildOAuthCallbackUrl(origin),
-        queryParams: { hd: "ucsc.edu", prompt: "select_account" },
+        queryParams: { prompt: "select_account", ...(PUBLIC_HOSTED_DOMAIN ? { hd: PUBLIC_HOSTED_DOMAIN } : {}) } as Record<string, string>,
       };
       const { error } = user
         ? await supabase.auth.linkIdentity({ provider: "google", options })
@@ -305,7 +310,7 @@ export default function CourseAnalyzePage() {
             {/* Title */}
             <div className="space-y-2">
               <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-                {isFall115A ? "CSE 115A Repo Metrics" : "Repo Analytics"}
+                {isFall115A ? `${COURSE_SHORT_NAME} Repo Metrics` : "Repo Analytics"}
               </h1>
               <p className="text-lg font-medium text-muted-foreground">
                 {courseMeta ? courseMeta.fullName : courseIdDisplay}
@@ -323,7 +328,7 @@ export default function CourseAnalyzePage() {
 
             {isFall115A ? (
               <a href={ASSIGNMENT_URL} target="_blank" rel="noopener noreferrer" className="text-sm text-primary underline underline-offset-4 hover:no-underline">
-                Read the CSE 115A sprint task assignment
+                Read the {COURSE_SHORT_NAME} sprint task assignment
               </a>
             ) : null}
 
@@ -361,14 +366,14 @@ export default function CourseAnalyzePage() {
         ) : null}
         {isFall115A && courseAuthStatus !== "ready" ? (
           <div className={`${cardOuter} space-y-4 text-center`}>
-            <h2 className="text-lg font-semibold">Sign in with your UCSC account</h2>
-            <p className="text-sm text-muted-foreground">Use Google to confirm your <code>@ucsc.edu</code> account before submitting your assignment.</p>
+            <h2 className="text-lg font-semibold">Sign in with your {COURSE_UNIVERSITY} account</h2>
+            <p className="text-sm text-muted-foreground">Use Google to confirm your <code>{PUBLIC_DOMAINS_LABEL}</code> account before submitting your assignment.</p>
             {courseAuthStatus === "checking" ? (
               <Loader2 className="mx-auto size-5 animate-spin" aria-label="Checking sign-in" />
             ) : (
               <Button type="button" disabled={signingIn} onClick={() => void handleGoogleOAuth()}>
                 {signingIn ? <Loader2 className="mr-2 size-4 animate-spin" aria-hidden /> : null}
-                Sign in with UCSC Google
+                Sign in with Google
               </Button>
             )}
           </div>
@@ -426,16 +431,16 @@ export default function CourseAnalyzePage() {
 
           {isFall115A && courseAuthStatus !== "ready" ? (
             <div className="flex w-full max-w-md mx-auto flex-col items-center gap-4 rounded-md border border-border bg-card p-6 text-center">
-              <h2 className="text-lg font-semibold">Sign in with your UCSC account</h2>
+              <h2 className="text-lg font-semibold">Sign in with your {COURSE_UNIVERSITY} account</h2>
               <p className="text-sm text-muted-foreground">
-                Use Google to confirm your <code>@ucsc.edu</code> account. You will connect GitHub next to choose your team repository.
+                Use Google to confirm your <code>{PUBLIC_DOMAINS_LABEL}</code> account. You will connect GitHub next to choose your team repository.
               </p>
               {courseAuthStatus === "checking" ? (
                 <Loader2 className="size-5 animate-spin" aria-label="Checking sign-in" />
               ) : (
                 <Button type="button" disabled={signingIn} onClick={() => void handleGoogleOAuth()}>
                   {signingIn ? <Loader2 className="mr-2 size-4 animate-spin" aria-hidden /> : null}
-                  Sign in with UCSC Google
+                  Sign in with Google
                 </Button>
               )}
             </div>

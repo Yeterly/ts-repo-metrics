@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { COURSE_NAME, COURSE_SHORT_NAME, COURSE_UNIVERSITY } from "@/lib/courseUcscAuth";
 
 export const metadata: Metadata = {
   title: "Privacy Statement — Repo Metrics",
@@ -34,9 +35,9 @@ export default function PrivacyPage() {
         <h2 className="text-xl font-semibold">Data we collect</h2>
 
         <div className="space-y-3">
-          <h3 className="font-semibold">CSE 115A account and assignments</h3>
+          <h3 className="font-semibold">{COURSE_NAME} account and assignments</h3>
           <p className="leading-relaxed text-muted-foreground">
-            The CSE 115A app uses Google sign-in to verify your UCSC email address.
+            The {COURSE_SHORT_NAME} app uses Google sign-in to verify your {COURSE_UNIVERSITY} email address.
             It stores that address with your course membership. When you submit a
             task PR, it stores the PR link, the committed task specification,
             process-check results, and the linked Repo Metrics analysis. Course

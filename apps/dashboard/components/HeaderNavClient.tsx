@@ -30,6 +30,7 @@ import {
   stashOAuthProvider,
 } from "@/lib/oauthRedirectOrigin";
 import { cn } from "@/lib/utils";
+import { COURSE_SHORT_NAME } from "@/lib/courseUcscAuth";
 
 const GITHUB_REPO = "https://github.com/scottyUX/ts-repo-metrics";
 
@@ -409,7 +410,7 @@ export function HeaderNavClient({ cse115aSite = false }: { cse115aSite?: boolean
           href={signedIn ? "/repos" : "/"}
           className="shrink-0 text-sm font-semibold tracking-tight text-foreground transition-colors hover:text-foreground"
         >
-          {cse115aSite ? "CSE 115A Repo Metrics" : "Repo Metrics"}
+          {cse115aSite ? `${COURSE_SHORT_NAME} Repo Metrics` : "Repo Metrics"}
         </Link>
       )}
 

@@ -1,7 +1,7 @@
 import "server-only";
 import { createUserSupabaseServerClient } from "@/lib/supabase/server-user";
 import { getSupabase } from "@/lib/supabase/server";
-import { verifiedUcscGoogleEmail } from "@/lib/courseUcscAuth";
+import { isCourseAdminEmail, verifiedUcscGoogleEmail } from "@/lib/courseUcscAuth";
 
 export type CourseIdentity = { userId: string; email: string };
 export type Course = { id: string; slug: string; title: string; term: string; assignment_count: number; active: boolean };
@@ -53,9 +53,14 @@ export function lockedAssignmentMessage(assignmentNumber: number): string {
 export type CourseRole = "instructor" | "ta";
 export type StaffCourse = Course & { role: CourseRole };
 
-/** Courses where this email is an instructor or TA. */
+/** Courses where this email is an instructor or TA. Admins (`CSE115A_ADMIN_EMAILS`) are instructors on every course. */
 export async function getStaffCourses(email: string): Promise<StaffCourse[]> {
   const db = getSupabase();
+  if (isCourseAdminEmail(email)) {
+    const { data: courses, error } = await db.from("cse_courses").select("id,slug,title,term,assignment_count,active");
+    if (error) throw new Error("Could not load courses.");
+    return (courses ?? []).map((course) => ({ ...course, role: "instructor" })) as StaffCourse[];
+  }
   const { data: roles, error } = await db.from("cse_course_roles").select("course_id,role").eq("email", email.toLowerCase());
   if (error) throw new Error("Could not check course staff.");
   if (!roles?.length) return [];

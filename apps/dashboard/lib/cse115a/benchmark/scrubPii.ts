@@ -57,13 +57,13 @@ function knownPatterns(ids: PersonalIdentifiers): RegExp[] {
   ];
 }
 
-const UCSC_EMAIL = /[A-Za-z0-9._%+-]+@(?:[A-Za-z0-9-]+\.)*ucsc\.edu\b/gi;
+const UCSC_EMAIL = /[A-Za-z0-9._%+-]+@(?:[A-Za-z0-9-]+\.)*(?:ucsc\.edu|istinye\.edu\.tr)\b/gi;
 
 /**
  * Scrubs the added lines of a patch. Context and removed lines must match
  * base_commit to apply, and that text is already in the repository, so they
  * are left alone. Replacements stay valid code: known names become `student`,
- * known logins `anon`, and UCSC or known emails `student@example.com`.
+ * known logins `anon`, and UCSC, Istinye or known emails `student@example.com`.
  * Test-fixture emails (a@b.co) and decorators (@pytest.mark) are kept.
  */
 export function scrubPatch(patch: string, ids: PersonalIdentifiers): { patch: string; changed: boolean } {

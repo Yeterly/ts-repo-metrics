@@ -7,6 +7,7 @@ import { footerLabelForCoachTab } from "@/lib/coachSays/coachSaysFacts";
 import type { CoachSaysPayload, CoachSaysPriorityTab } from "@/lib/coachSays/coachSaysTypes";
 import { RESULTS_TAB } from "@/lib/resultsNavigation";
 import type { CommitHabitsTier } from "@/lib/commitHabitsScore";
+import { COURSE_NAME } from "@/lib/courseUcscAuth";
 
 const MAX_FACTS_CHARS = 48_000;
 
@@ -215,7 +216,7 @@ function validateModelCoachPayload(
   };
 }
 
-const COACH_SYSTEM = `You write the global “YOUR COACH SAYS” coaching card for a CSE 115A software engineering course dashboard. The repository metrics snapshot is JSON in the user message.
+const COACH_SYSTEM = `You write the global “YOUR COACH SAYS” coaching card for a ${COURSE_NAME} course dashboard. The repository metrics snapshot is JSON in the user message.
 
 Tab ids (for priorityTab): commit-habits | testing | code-quality | react-components | code-complexity | ai-usage — use only values listed in allowedPriorityTabs.
 

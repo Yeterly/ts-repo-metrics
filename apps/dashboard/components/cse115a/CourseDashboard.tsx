@@ -27,6 +27,7 @@ import { Cse115aStudentBar } from "@/components/cse115a/Cse115aStudentBar";
 import { CourseSetup } from "@/components/cse115a/CourseSetup";
 import { SprintChecklistDialog } from "@/components/cse115a/SprintChecklistDialog";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { COURSE_SHORT_NAME } from "@/lib/courseUcscAuth";
 
 type SprintDue = { number: number; due_at: string | null };
 type Course = { id: string; slug: string; title: string; term: string; assignment_count: number; sprints?: SprintDue[] };
@@ -66,7 +67,7 @@ const POLL_MS = 20_000;
 const PREVIEW_TIME = "2026-09-30T19:12:00Z";
 
 const previewCourse: Course = {
-  id: "preview-course", slug: "CSE115A-Fall26", title: "CSE 115A", term: "Fall 2026", assignment_count: 5,
+  id: "preview-course", slug: "CSE115A-Fall26", title: COURSE_SHORT_NAME, term: "Fall 2026", assignment_count: 5,
 };
 const passValidation: Record<string, boolean> = {
   prMerged: true, specCommittedFirst: true, baseTagPushed: true, doneTagOnMergeCommit: true,
@@ -86,7 +87,7 @@ function previewTask(slot: number, assignmentNumber: number, validation: Record<
 }
 
 function previewMe(state: PreviewState): Me {
-  const email = "student@ucsc.edu";
+  const email = "student@stu.istinye.edu.tr";
   const consent: Consent[] = [{ course_id: previewCourse.id, consented: true, consent_version: CONSENT_VERSION, updated_at: PREVIEW_TIME }];
   const base = { email, courses: [previewCourse], grades: [] as ReleasedGrade[], consent };
   if (state === "joined") return { ...base, consent: [], submissions: [], assignmentSubmissions: [] };

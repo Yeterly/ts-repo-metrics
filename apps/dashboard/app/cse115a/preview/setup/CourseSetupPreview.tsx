@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CourseSetup } from "@/components/cse115a/CourseSetup";
+import { COURSE_SHORT_NAME } from "@/lib/courseUcscAuth";
 
 export type SetupPreviewState = "course" | "github" | "connected";
 
@@ -14,8 +15,8 @@ export function CourseSetupPreview({ state }: { state: SetupPreviewState }) {
   return (
     <div className="w-full max-w-5xl py-8">
       <CourseSetup
-        email="student@ucsc.edu"
-        courseLabel={joined ? "CSE 115A · Fall 2026" : null}
+        email="student@stu.istinye.edu.tr"
+        courseLabel={joined ? `${COURSE_SHORT_NAME} · Fall 2026` : null}
         githubConnected={connected}
         githubLogin={connected ? "a-student" : null}
         joinCode={code}

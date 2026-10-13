@@ -20,20 +20,23 @@ export function UcscGoogleButton({ fullWidth = false }: { fullWidth?: boolean })
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [googleEnabled, setGoogleEnabled] = useState<boolean | null>(null);
+  const [hostedDomain, setHostedDomain] = useState<string | null>(null);
   const [availabilityError, setAvailabilityError] = useState(false);
   useEffect(() => {
     let active = true;
     void fetch("/api/cse115a/auth-availability")
       .then((response) => response.json())
-      .then((body: { googleEnabled?: boolean | null }) => {
-        if (active) setGoogleEnabled(body.googleEnabled ?? null);
+      .then((body: { googleEnabled?: boolean | null; hostedDomain?: string | null }) => {
+        if (!active) return;
+        setGoogleEnabled(body.googleEnabled ?? null);
+        setHostedDomain(body.hostedDomain ?? null);
       })
       .catch(() => { if (active) setAvailabilityError(true); });
     return () => { active = false; };
   }, []);
   async function begin() {
     if (googleEnabled !== true) {
-      setError("UCSC Google sign in has not been enabled for this preview yet.");
+      setError("Google sign in has not been enabled for this preview yet.");
       return;
     }
     if (!isBrowserSupabaseConfigured()) {
@@ -49,7 +52,7 @@ export function UcscGoogleButton({ fullWidth = false }: { fullWidth?: boolean })
       stashOAuthProvider("google");
       const options = {
         redirectTo: buildOAuthCallbackUrl(getOAuthRedirectOrigin()),
-        queryParams: { hd: "ucsc.edu", prompt: "select_account" },
+        queryParams: { prompt: "select_account", ...(hostedDomain ? { hd: hostedDomain } : {}) } as Record<string, string>,
       };
       const result = user?.identities?.some((identity) => identity.provider === "google")
         ? await supabase.auth.signInWithOAuth({ provider: "google", options })
@@ -68,7 +71,7 @@ export function UcscGoogleButton({ fullWidth = false }: { fullWidth?: boolean })
     <div className={fullWidth ? "space-y-3" : "space-y-3 text-center"}>
       <button type="button" onClick={() => void begin()} disabled={busy || googleEnabled !== true} className={`${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-50`}>
         <GoogleMark />
-        {busy ? "Opening Google…" : "Continue with UCSC Google"}
+        {busy ? "Opening Google…" : "Continue with Google"}
       </button>
       {googleEnabled === null ? <p className={statusClass}>{availabilityError ? "Could not check Google sign in availability. Refresh and try again." : "Checking Google sign in availability…"}</p> : null}
       {googleEnabled === false ? <p className={fullWidth ? "text-sm text-amber-800" : "text-sm text-amber-700 dark:text-amber-300"}>Google sign in needs to be enabled in Supabase before students can continue.</p> : null}

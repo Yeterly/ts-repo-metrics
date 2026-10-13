@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 export async function PUT(request: Request) {
   if (!isSupabaseConfigured()) return NextResponse.json({ error: "Course storage is not configured." }, { status: 503 });
   const identity = await getCourseIdentity();
-  if (!identity) return NextResponse.json({ error: "Sign in with UCSC Google." }, { status: 401 });
+  if (!identity) return NextResponse.json({ error: "Sign in with your Istinye University Google account." }, { status: 401 });
   const body = await request.json().catch(() => null) as { courseSlug?: unknown; consented?: unknown } | null;
   if (typeof body?.consented !== "boolean") return NextResponse.json({ error: "consented must be true or false." }, { status: 400 });
   const course = await getEnrolledCourse(identity.userId, typeof body.courseSlug === "string" ? body.courseSlug : "");

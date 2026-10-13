@@ -8,8 +8,13 @@ if (!slug || !email || !url || !serviceKey || !["instructor", "ta"].includes(rol
   console.error("Usage: SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node apps/dashboard/scripts/addCourseStaff.mjs COURSE_SLUG EMAIL [instructor|ta]");
   process.exit(1);
 }
-if (!/^[a-z0-9._%+-]+@ucsc\.edu$/.test(email)) {
-  console.error("Staff sign in with UCSC Google, so the email must end in @ucsc.edu.");
+// Same allow list as lib/courseUcscAuth.ts.
+const envList = (value) => (value ?? "").split(",").map((item) => item.trim().toLowerCase().replace(/^@/, "")).filter(Boolean);
+const domains = envList(process.env.CSE115A_ALLOWED_EMAIL_DOMAINS);
+const allowedDomains = domains.length ? domains : ["ucsc.edu"];
+const admins = envList(process.env.CSE115A_ADMIN_EMAILS);
+if (!/^[^@\s]+@[^@\s]+$/.test(email) || !(admins.includes(email) || allowedDomains.includes(email.slice(email.indexOf("@") + 1)))) {
+  console.error(`Staff sign in with Google, so the email must end in @${allowedDomains.join(", @")} or be in CSE115A_ADMIN_EMAILS.`);
   process.exit(1);
 }
 

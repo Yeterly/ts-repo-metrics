@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAnonKeyNode, supabaseProjectUrlNode } from "@/lib/supabase/projectEnv";
+import { courseGoogleHostedDomain } from "@/lib/courseUcscAuth";
 
 export const runtime = "nodejs";
 
@@ -14,7 +15,7 @@ export async function GET() {
     });
     if (!response.ok) throw new Error(`settings:${response.status}`);
     const settings = await response.json() as { external?: { google?: boolean } };
-    return NextResponse.json({ googleEnabled: settings.external?.google === true });
+    return NextResponse.json({ googleEnabled: settings.external?.google === true, hostedDomain: courseGoogleHostedDomain() });
   } catch {
     return NextResponse.json({ googleEnabled: null, reason: "Could not check sign-in availability." }, { status: 503 });
   }

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import type { CommitHabitsInsightPayload, TabInsightId } from "@/lib/tabInsights/types";
 import { RESULTS_TAB } from "@/lib/resultsNavigation";
+import { COURSE_NAME } from "@/lib/courseUcscAuth";
 
 const MAX_FACTS_CHARS = 40_000;
 
@@ -42,7 +43,7 @@ function validateCommitHabitsInsightPayload(raw: unknown): CommitHabitsInsightPa
   };
 }
 
-const COMMIT_HABITS_TAB_INSIGHT_SYSTEM = `You write short coaching copy for the "Commit Habits" tab of a CSE 115A software engineering course dashboard.
+const COMMIT_HABITS_TAB_INSIGHT_SYSTEM = `You write short coaching copy for the "Commit Habits" tab of a ${COURSE_NAME} course dashboard.
 
 FACTS IN USER MESSAGE (JSON keys — use only what appears; do not assume missing keys):
 - tabId, commitSha, repoUrl

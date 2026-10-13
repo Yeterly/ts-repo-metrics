@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase/server";
 import { guardCourse } from "@/lib/cse115a/instructorApi";
+import { courseAllowedDomains, isAllowedCourseEmail } from "@/lib/courseUcscAuth";
 
 export const runtime = "nodejs";
 
 type Params = { params: Promise<{ slug: string }> };
 
-const UCSC_EMAIL = /^[a-z0-9._%+-]+@ucsc\.edu$/;
 
 export async function GET(_request: Request, { params }: Params) {
   const { slug } = await params;
@@ -26,7 +26,9 @@ export async function POST(request: Request, { params }: Params) {
   const body = await request.json().catch(() => null) as { email?: unknown; role?: unknown } | null;
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
   const role = body?.role;
-  if (!UCSC_EMAIL.test(email)) return NextResponse.json({ error: "Enter a @ucsc.edu email." }, { status: 400 });
+  if (!isAllowedCourseEmail(email)) {
+    return NextResponse.json({ error: `Enter an email that can sign in: @${courseAllowedDomains().join(", @")} or a listed admin.` }, { status: 400 });
+  }
   if (role !== "instructor" && role !== "ta") return NextResponse.json({ error: "Role must be instructor or ta." }, { status: 400 });
   if (email === guard.identity.email.toLowerCase() && role !== "instructor") {
     return NextResponse.json({ error: "You cannot remove your own instructor role." }, { status: 400 });

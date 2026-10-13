@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-// First-visit setup for CSE 115A students: UCSC account, course code, GitHub.
+// First-visit setup for CSE 115A students: university account, course code, GitHub.
 // Presentational; the dashboard owns the join and GitHub OAuth calls.
 
 export type CourseSetupProps = {
@@ -49,7 +49,7 @@ const STATUS_TEXT: Record<StepState, string> = { done: "done", current: "current
 export function CourseSetup(props: CourseSetupProps) {
   const joined = Boolean(props.courseLabel);
   const steps: Array<{ key: StepKey; label: string; done: boolean; detail: React.ReactNode }> = [
-    { key: "account", label: "UCSC account", done: true, detail: props.email },
+    { key: "account", label: "University account", done: true, detail: props.email },
     { key: "course", label: joined ? "Course" : "Enter your course code", done: joined, detail: props.courseLabel },
     {
       key: "github",

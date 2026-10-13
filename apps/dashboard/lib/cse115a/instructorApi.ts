@@ -10,7 +10,7 @@ type Guarded = { identity: CourseIdentity; course: StaffCourse } | { response: N
 async function signedIn(): Promise<CourseIdentity | NextResponse> {
   if (!isSupabaseConfigured()) return NextResponse.json({ error: "Course storage is not configured." }, { status: 503 });
   const identity = await getCourseIdentity();
-  return identity ?? NextResponse.json({ error: "Sign in with UCSC Google." }, { status: 401 });
+  return identity ?? NextResponse.json({ error: "Sign in with your Istinye University Google account." }, { status: 401 });
 }
 
 const forbidden = (instructorOnly?: boolean) => NextResponse.json(

@@ -46,7 +46,7 @@ export function StaffPanel({ slug }: { slug: string }) {
       <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-primary">{data.course.title} · {data.course.term}</p>
         <h1 className="mt-1 text-2xl font-semibold">Staff</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Staff sign in with their UCSC Google account. TAs can review, edit, release, and regrade. Only instructors can unlock submissions and manage staff.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Staff sign in with their Istinye University Google account, or an admin email. TAs can review, edit, release, and regrade. Only instructors can unlock submissions and manage staff.</p>
       </div>
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
       <ul className="divide-y divide-border rounded-xl border border-border bg-card">
@@ -65,8 +65,8 @@ export function StaffPanel({ slug }: { slug: string }) {
       {instructor ? (
         <form className="flex flex-wrap items-end gap-3" onSubmit={(event) => { event.preventDefault(); void change({ method: "POST", body: JSON.stringify({ email, role }) }); }}>
           <label className="text-sm">
-            <span className="mb-1 block text-muted-foreground">UCSC email</span>
-            <input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@ucsc.edu" className="w-64 rounded-lg border border-input bg-background px-3 py-2" />
+            <span className="mb-1 block text-muted-foreground">Email</span>
+            <input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@stu.istinye.edu.tr" className="w-64 rounded-lg border border-input bg-background px-3 py-2" />
           </label>
           <label className="text-sm">
             <span className="mb-1 block text-muted-foreground">Role</span>

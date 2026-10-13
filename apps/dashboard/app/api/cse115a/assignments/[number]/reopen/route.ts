@@ -13,7 +13,7 @@ export const runtime = "nodejs";
 export async function POST(request: Request, { params }: { params: Promise<{ number: string }> }) {
   if (!isSupabaseConfigured()) return NextResponse.json({ error: "Course storage is not configured." }, { status: 503 });
   const identity = await getCourseIdentity();
-  if (!identity) return NextResponse.json({ error: "Sign in with UCSC Google." }, { status: 401 });
+  if (!identity) return NextResponse.json({ error: "Sign in with your Istinye University Google account." }, { status: 401 });
   const { number } = await params;
   const assignmentNumber = Number(number);
   const body = await request.json().catch(() => null) as { courseSlug?: unknown } | null;

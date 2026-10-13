@@ -22,7 +22,7 @@ function isLockedError(error: { message?: string } | null): boolean {
 
 async function context(params: Params, body: SubmissionBody) {
   const identity = await getCourseIdentity();
-  if (!identity) return { error: NextResponse.json({ error: "Sign in with a verified UCSC Google account." }, { status: 401 }) };
+  if (!identity) return { error: NextResponse.json({ error: "Sign in with a verified Istinye University Google account." }, { status: 401 }) };
   const { number } = await params.params;
   const assignmentNumber = Number(number);
   const slug = typeof body.courseSlug === "string" ? body.courseSlug : "";

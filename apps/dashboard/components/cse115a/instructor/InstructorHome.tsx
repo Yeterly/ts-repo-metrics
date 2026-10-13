@@ -79,7 +79,7 @@ export function InstructorHome() {
   const counts = useMemo(() => Object.fromEntries(FILTERS.map((item) => [item, (rows ?? []).filter((row) => matches(row, item)).length])), [rows]);
 
   if (courses && courses.length === 0) {
-    return <div className="w-full max-w-3xl py-10"><h1 className="text-2xl font-semibold">Instructor</h1><p className="mt-2 text-muted-foreground">Your account is not on the staff of any course. Ask an instructor to add your UCSC email.</p></div>;
+    return <div className="w-full max-w-3xl py-10"><h1 className="text-2xl font-semibold">Instructor</h1><p className="mt-2 text-muted-foreground">Your account is not on the staff of any course. Ask an instructor to add your email.</p></div>;
   }
 
   return (

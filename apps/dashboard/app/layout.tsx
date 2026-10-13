@@ -9,6 +9,7 @@ import { Cse115aMain } from "@/components/cse115a/Cse115aMain";
 import { Cse115aFooter } from "@/components/cse115a/Cse115aFooter";
 import { HideOnCse115aLanding } from "@/components/cse115a/HideOnCse115aLanding";
 import "./globals.css";
+import { COURSE_NAME, COURSE_SHORT_NAME } from "@/lib/courseUcscAuth";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -18,8 +19,8 @@ const geistMono = Geist_Mono({
 export function generateMetadata(): Metadata {
   return process.env.CSE115A_SITE === "true"
     ? {
-        title: "CSE 115A Repo Metrics",
-        description: "Analyze your merged CSE 115A sprint task pull requests.",
+        title: `${COURSE_SHORT_NAME} Repo Metrics`,
+        description: `Analyze your merged ${COURSE_NAME} sprint task pull requests.`,
       }
     : {
         title: "Repo Metrics Dashboard",
