@@ -58,8 +58,9 @@ These are approximate list prices and need checking for the chosen region. OpenA
    - Keep the Email provider enabled. The app accepts an emailed-code sign-in only for a confirmed address on the allow list.
 5. **Google provider (staff):** a Google OAuth client with the same Supabase callback URL.
 6. **GitHub provider:** a GitHub OAuth app owned by Yeterly, with the same Supabase callback URL.
-7. **Auth settings:** turn on **manual identity linking**. Set **Site URL** to `https://job191.yeterly.ai`, and add `https://job191.yeterly.ai/auth/callback` and `http://localhost:3015/auth/callback` to the redirect URLs.
-8. **Course data:** insert the Job191 row in `cse_courses` with the Job191 title, add `cse_sprints` due dates, then run `apps/dashboard/scripts/createCourseCode.mjs` and `addCourseStaff.mjs`.
+7. **Sign-up allow list:** fill `cse_signup_allowlist` with the allowed domain and the admin emails (`insert into public.cse_signup_allowlist values ('stu.istinye.edu.tr'), ('<admin email>');`), then enable **Authentication > Hooks > Before User Created** with the Postgres function `public.cse_before_user_created`. Supabase then refuses any new account outside the list, whichever sign-in method is used.
+8. **Auth settings:** turn on **manual identity linking**. Set **Site URL** to `https://job191.yeterly.ai`, and add `https://job191.yeterly.ai/auth/callback` and `http://localhost:3015/auth/callback` to the redirect URLs.
+9. **Course data:** insert the Job191 row in `cse_courses` with the Job191 title, add `cse_sprints` due dates, then run `apps/dashboard/scripts/createCourseCode.mjs` and `addCourseStaff.mjs`.
 
 ## Environment variables
 
