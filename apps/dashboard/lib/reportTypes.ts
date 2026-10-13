@@ -46,7 +46,7 @@ export interface FunctionDetail {
   hasReturnAnnotation?: boolean;
 }
 
-/** Phase 3 — silent failure: empty or log-only catch (React-scope JS/TS) or except (every Python file). */
+/** Phase 3 — silent failure: empty or log-only catch (React-scope JS/TS) or except (every non-test Python file). */
 export interface SilentFailureEvent {
   file: string;
   line: number;
