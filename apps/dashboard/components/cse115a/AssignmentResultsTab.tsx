@@ -1,6 +1,7 @@
 import type { TaskSpec } from "@/lib/cse115a/taskSpec";
 import { RUBRIC, TASK_POINTS } from "@/lib/cse115a/rubric";
 import type { StudentTaskGrade } from "@/lib/cse115a/gradeReview";
+import { COURSE_INSTRUCTIONS_URL } from "@/lib/courseUcscAuth";
 
 export type CourseTaskEvidence = {
   taskId: string;
@@ -121,7 +122,7 @@ export function AssignmentResultsTab({ task }: { task: CourseTaskEvidence }) {
           })}
         </div>
       </div>
-      <a href="https://github.com/scottyUX/hecate-router/blob/main/docs/cse115a-sprint-task-specifications.md" target="_blank" rel="noopener noreferrer" className="inline-block text-sm text-primary underline">Read the full assignment rubric</a>
+      <a href={COURSE_INSTRUCTIONS_URL} target="_blank" rel="noopener noreferrer" className="inline-block text-sm text-primary underline">Read the full assignment rubric</a>
     </div>
   );
 }

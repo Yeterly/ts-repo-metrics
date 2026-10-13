@@ -1,8 +1,8 @@
 "use client";
 
-import { COURSE_SHORT_NAME } from "@/lib/courseUcscAuth";
+import { COURSE_INSTRUCTIONS_URL, COURSE_SHORT_NAME } from "@/lib/courseUcscAuth";
 
-const INSTRUCTIONS = "https://github.com/scottyUX/hecate-router/blob/main/docs/cse115a-sprint-task-specifications.md";
+const INSTRUCTIONS = COURSE_INSTRUCTIONS_URL;
 
 export function Cse115aStudentBar({
   courseLabel,

@@ -15,6 +15,9 @@ export const COURSE_UNIVERSITY = process.env.NEXT_PUBLIC_COURSE_UNIVERSITY?.trim
 export const COURSE_NAME = process.env.NEXT_PUBLIC_COURSE_NAME?.trim() || "Job191 - Dream Data Labs AI Augmented Software Engineering";
 /** Short course name for headers and tab titles. */
 export const COURSE_SHORT_NAME = process.env.NEXT_PUBLIC_COURSE_SHORT_NAME?.trim() || "Job191";
+/** Student instructions (sprint task specifications) linked from the app. */
+export const COURSE_INSTRUCTIONS_URL = process.env.NEXT_PUBLIC_COURSE_INSTRUCTIONS_URL?.trim()
+  || "https://github.com/Yeterly/ts-repo-metrics/blob/feat/cse115a-g05fb9/docs/job191-sprint-task-specifications.md";
 
 function listFromEnv(value: string | undefined): string[] {
   return (value ?? "").split(",").map((item) => item.trim().toLowerCase().replace(/^@/, "")).filter(Boolean);

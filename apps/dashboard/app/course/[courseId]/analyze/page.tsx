@@ -23,7 +23,7 @@ import {
   stashOAuthNextPath,
   stashOAuthProvider,
 } from "@/lib/oauthRedirectOrigin";
-import { COURSE_SHORT_NAME, COURSE_UNIVERSITY, courseAllowedDomains, courseGoogleHostedDomain, verifiedUcscGoogleEmail } from "@/lib/courseUcscAuth";
+import { COURSE_INSTRUCTIONS_URL, COURSE_SHORT_NAME, COURSE_UNIVERSITY, courseAllowedDomains, courseGoogleHostedDomain, verifiedUcscGoogleEmail } from "@/lib/courseUcscAuth";
 
 // Client bundles only see NEXT_PUBLIC_* variables. Admins are not exposed here; the server still accepts them.
 const PUBLIC_COURSE_ENV = { CSE115A_ALLOWED_EMAIL_DOMAINS: process.env.NEXT_PUBLIC_CSE115A_ALLOWED_EMAIL_DOMAINS } as unknown as NodeJS.ProcessEnv;
@@ -73,7 +73,7 @@ const COURSE_META: Record<string, { fullName: string; term: string; description?
 };
 
 const FALL_2026_SECTIONS = new Set(["CSE115A-Fall26", "CSE115A-Fall26-S01", "CSE115A-Fall26-S02"]);
-const ASSIGNMENT_URL = "https://github.com/scottyUX/hecate-router/blob/main/docs/cse115a-sprint-task-specifications.md";
+const ASSIGNMENT_URL = COURSE_INSTRUCTIONS_URL;
 
 type StepNum = 1 | 2 | 3;
 
