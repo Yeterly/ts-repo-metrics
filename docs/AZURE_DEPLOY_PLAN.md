@@ -8,7 +8,7 @@ Run the existing Docker image on Azure Container Apps, keep Supabase (a new Job1
 
 - **Keep Supabase.** It already handles Google, GitHub and Microsoft sign-in, sessions, Postgres and row-level security. Replacing it would have cost 7 to 10 developer days. Use the Pro plan for the live course (about $25 a month: no pausing, daily backups). The free plan pauses after a week without activity and has no backups, so use it only for testing.
 - **Hosting:** Azure Container Apps, with two apps built from the repo's existing `Dockerfile`: the web app (1 to 3 replicas) and one grading worker (`CSE115A_WORKER=true`, exactly 1 replica).
-- **Sign-in:** Microsoft (the Supabase `azure` provider) for students, restricted to Istinye's tenant, with a one-time code emailed to the student's university address as the fallback. Google for staff on other domains who are on the admin list. GitHub for repository access. None of this needs Istinye IT.
+- **Sign-in:** Microsoft (the Supabase `azure` provider) for students, restricted to Istinye's tenant, with a one-time code emailed to the student's university address as the fallback. Google for staff on other domains who are on the admin list. GitHub sign-in only to identify each student; repositories are read through the course GitHub App that each team installs on its own repository. None of this needs Istinye IT.
 - **Domain:** job191.yeterly.ai, a CNAME in AWS Route 53, with a free managed certificate from Container Apps.
 
 ## Architecture
@@ -57,7 +57,7 @@ These are approximate list prices and need checking for the chosen region. OpenA
    - Edit the **Magic Link** and **Confirm signup** email templates to show the code, `{{ .Token }}`, instead of a link. The app asks students to type the code.
    - Keep the Email provider enabled. The app accepts an emailed-code sign-in only for a confirmed address on the allow list.
 5. **Google provider (staff):** a Google OAuth client with the same Supabase callback URL.
-6. **GitHub provider:** a GitHub OAuth app owned by Yeterly, with the same Supabase callback URL.
+6. **GitHub App:** a GitHub App owned by Yeterly, used both as the Supabase GitHub provider and for read-only repository access. See [JOB191_GITHUB_APP.md](JOB191_GITHUB_APP.md).
 7. **Sign-up allow list:** fill `cse_signup_allowlist` with the allowed domain and the admin emails (`insert into public.cse_signup_allowlist values ('stu.istinye.edu.tr'), ('<admin email>');`), then enable **Authentication > Hooks > Before User Created** with the Postgres function `public.cse_before_user_created`. Supabase then refuses any new account outside the list, whichever sign-in method is used.
 8. **Auth settings:** turn on **manual identity linking**. Set **Site URL** to `https://job191.yeterly.ai`, and add `https://job191.yeterly.ai/auth/callback` and `http://localhost:3015/auth/callback` to the redirect URLs.
 9. **Course data:** insert the Job191 row in `cse_courses` with the Job191 title, add `cse_sprints` due dates, then run `apps/dashboard/scripts/createCourseCode.mjs` and `addCourseStaff.mjs`.
@@ -70,6 +70,8 @@ These are approximate list prices and need checking for the chosen region. OpenA
 | `SUPABASE_URL`, `SUPABASE_ANON_KEY` | runtime | same values |
 | `SUPABASE_SERVICE_ROLE_KEY` | runtime secret | from the Supabase project |
 | `GITHUB_OAUTH_ENCRYPTION_KEY` | runtime secret | a long random string |
+| `GITHUB_APP_ID`, `GITHUB_APP_SLUG` | runtime | from the GitHub App settings page |
+| `GITHUB_APP_PRIVATE_KEY` | runtime secret | base64 of the GitHub App private key (.pem) |
 | `OPENAI_API_KEY` | worker secret | Yeterly's key |
 | `APP_ORIGIN` | runtime | `https://job191.yeterly.ai` |
 | `CSE115A_SITE` | runtime | `true` |
@@ -110,5 +112,5 @@ These are approximate list prices and need checking for the chosen region. OpenA
 - [ ] **Route 53:** is yeterly.ai already a hosted zone there, and who can add records?
 - [ ] **Research consent:** the consent text is still a UCSC IRB placeholder, so the benchmark export stays off until Istinye-approved wording is in place.
 
-- **Risk, private repositories:** students must grant the GitHub OAuth app access to their team's organization, or the app cannot read their pull requests.
+- **Risk, organization repositories:** if a team's repository is in a GitHub organization, an owner of that organization must approve the course GitHub App, or the app cannot read the team's pull requests.
 - **Risk, admin accounts:** the three admin emails sign in with Google. If any of them is not a Google account, it needs another route, such as being added as a guest in the Istinye tenant.

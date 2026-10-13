@@ -85,7 +85,8 @@ export async function GET(request: Request) {
   }
 
   // Only a GitHub sign-in's provider token is a GitHub token; Google and Microsoft tokens are never stored.
-  const isGitHubToken = oauthProvider !== "google" && oauthProvider !== "azure";
+  // The course site reads repositories through its GitHub App, so it keeps no GitHub user tokens either.
+  const isGitHubToken = oauthProvider !== "google" && oauthProvider !== "azure" && process.env.CSE115A_SITE !== "true";
   if (
     isGitHubToken &&
     providerToken &&
