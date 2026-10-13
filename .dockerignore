@@ -33,3 +33,6 @@ report.json
 docs
 documentation*
 supabase
+
+# Never upload private keys with the build context
+*.pem
