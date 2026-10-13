@@ -153,9 +153,10 @@ export type LlmGradeResult = { criteria: CriterionGrade[]; model: string; prompt
 
 export async function gradeWithLlm(client: ChatClient, task: TaskSnapshot, model = graderModel()): Promise<LlmGradeResult> {
   const input = graderInput(task);
+  const temperature = graderTemperature(model);
   const response = await client.chat.completions.create({
     model,
-    temperature: 0,
+    ...(temperature === undefined ? {} : { temperature }),
     messages: buildMessages(input),
     response_format: { type: "json_schema", json_schema: { name: "cse115a_task_grade", strict: true, schema: GRADE_SCHEMA } },
   });
@@ -172,4 +173,12 @@ export async function gradeWithLlm(client: ChatClient, task: TaskSnapshot, model
 
 export function graderModel(): string {
   return process.env.CSE115A_GRADER_MODEL?.trim() || DEFAULT_GRADER_MODEL;
+}
+
+/**
+ * gpt-4 models grade at temperature 0. Reasoning models (gpt-5 and later) and Azure AI Foundry
+ * deployment names get no temperature, since those models accept only the default.
+ */
+export function graderTemperature(model: string): number | undefined {
+  return /^gpt-4/i.test(model) ? 0 : undefined;
 }

@@ -4,16 +4,30 @@ import { gradeTask } from "@/lib/cse115a/grader/gradeTask";
 import { drainJobs, type JobHandlers } from "./runner";
 import { supabaseJobStore } from "./supabaseStore";
 
-// Production wiring for the job runner: Supabase storage, OpenAI grading, and
-// a poller started from instrumentation.ts.
+// Production wiring for the job runner: Supabase storage, OpenAI or Azure AI Foundry
+// grading, and a poller started from instrumentation.ts.
 
 export const POLL_INTERVAL_MS = 15_000;
+
+/**
+ * Azure AI Foundry when AZURE_OPENAI_ENDPOINT is set (CSE115A_GRADER_MODEL is then the
+ * deployment name), otherwise OpenAI with OPENAI_API_KEY.
+ */
+export function graderClient(env: NodeJS.ProcessEnv = process.env): OpenAI {
+  const endpoint = env.AZURE_OPENAI_ENDPOINT?.trim();
+  if (endpoint) {
+    const apiKey = env.AZURE_OPENAI_API_KEY?.trim();
+    if (!apiKey) throw new Error("AZURE_OPENAI_API_KEY is not configured.");
+    return new OpenAI({ apiKey, baseURL: `${endpoint.replace(/\/+$/, "")}/openai/v1/` });
+  }
+  if (!env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured.");
+  return new OpenAI({ apiKey: env.OPENAI_API_KEY });
+}
 
 function productionHandlers(): JobHandlers {
   return {
     async grade(snapshot) {
-      if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured.");
-      const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const client = graderClient();
       return Promise.all(snapshot.tasks.map((task) => gradeTask(client, task)));
     },
   };
