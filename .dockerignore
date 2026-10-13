@@ -24,3 +24,12 @@ coverage
 **/.vercel
 
 apps/dashboard/.env.local
+
+# Not used by the image (the Dockerfile copies only the root package files, packages/engine and apps/dashboard)
+data
+research
+reports
+report.json
+docs
+documentation*
+supabase
