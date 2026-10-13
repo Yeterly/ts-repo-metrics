@@ -8,7 +8,7 @@ Run the existing Docker image on Azure Container Apps, move the data to Azure Da
 
 - **Hosting:** Azure Container Apps, with two apps built from the image that already exists: the web app, and one grading worker.
 - **Database:** Azure Database for PostgreSQL Flexible Server. The 11 existing SQL migrations carry over almost unchanged once the Supabase-only parts are removed.
-- **Sign-in:** Auth.js (NextAuth v5) in the Next.js app, with Google for the student and admin accounts and GitHub for repository access. Sessions and linked accounts are stored in the same Postgres database.
+- **Sign-in:** Auth.js (NextAuth v5) in the Next.js app, with Microsoft Entra ID for Istinye student accounts, Google for the admin accounts, and GitHub for repository access. Sessions and linked accounts are stored in the same Postgres database.
 - **Secrets:** Azure Key Vault, read by the apps through a managed identity.
 - **Domain:** job191.yeterly.ai, a CNAME in AWS Route 53, with a free managed certificate from Container Apps.
 - **Biggest piece of work:** replacing the Supabase client calls in about 55 files. Rough estimate: 5 to 8 developer days, plus 2 for infrastructure and testing.
@@ -34,12 +34,12 @@ Supabase is replaced by three parts: Auth.js for sign-in, plain Postgres on Azur
 
 **Sign-in with Auth.js (NextAuth v5)**
 
-- Providers: Google for students and admins, and GitHub for repository access. If Istinye student accounts turn out to be Microsoft 365, the Microsoft Entra ID provider replaces Google, and the rest stays the same.
+- Providers: Microsoft Entra ID for students, because Istinye email runs on Microsoft 365. Google stays for the admin accounts on other domains, and GitHub is for repository access. A student is accepted only when the token's tenant ID (`tid`) is Istinye's tenant, because Entra's `email` claim is not verified on its own.
 - The allow list moves into the Auth.js `signIn` callback. It keeps the current rules: any verified `@stu.istinye.edu.tr` account, the three admin emails from any domain, and everyone else rejected.
 - GitHub is linked to the signed-in user as a second account. Its access token is written to the existing encrypted `user_github_tokens` store.
 - Sessions are stored in the database through the Auth.js Postgres adapter (tables `users`, `accounts`, `sessions`, `verification_token`).
 - This replaces `middleware.ts`, `/auth/callback`, `getCourseIdentity()`, the Google button and the GitHub connect flow.
-- New callback URLs: `https://job191.yeterly.ai/api/auth/callback/google` and `/github`, on a new Google OAuth client and a new GitHub OAuth app owned by Yeterly.
+- New callback URLs: `https://job191.yeterly.ai/api/auth/callback/microsoft-entra-id`, `/google` and `/github`. They go on a Yeterly app registration in Entra ID, a Google OAuth client and a GitHub OAuth app.
 
 **Data access**
 
@@ -70,7 +70,7 @@ flowchart LR
     web --> pg
     worker --> pg
   end
-  web --> google["Google sign-in"]
+  web --> google["Entra ID + Google sign-in"]
   web --> github["GitHub OAuth and API"]
   worker --> openai["OpenAI grader model"]
 ```
@@ -90,7 +90,7 @@ The total is about $40 to 90 a month at class scale, plus OpenAI grading calls. 
 ## Environment variables
 
 - **Remove:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
-- **Add:** `DATABASE_URL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`, and `APP_ORIGIN=https://job191.yeterly.ai`.
+- **Add:** `DATABASE_URL`, `AUTH_SECRET`, `AUTH_MICROSOFT_ENTRA_ID_ID`, `AUTH_MICROSOFT_ENTRA_ID_SECRET`, `AUTH_MICROSOFT_ENTRA_ID_ISSUER` (Istinye tenant), `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`, and `APP_ORIGIN=https://job191.yeterly.ai`.
 - **Keep:** `GITHUB_OAUTH_ENCRYPTION_KEY`, `OPENAI_API_KEY`, `CSE115A_SITE=true`, `CSE115A_WORKER` (worker only), `CSE115A_ALLOWED_EMAIL_DOMAINS`, `NEXT_PUBLIC_CSE115A_ALLOWED_EMAIL_DOMAINS`, `CSE115A_ADMIN_EMAILS`, and the `NEXT_PUBLIC_COURSE_*` names.
 - Secrets live in Key Vault. `NEXT_PUBLIC_*` values are inlined at build time, so they are passed as Docker build arguments.
 
@@ -116,13 +116,13 @@ Five phases, about 7 to 10 developer days in total. Each phase ends with a check
 
 1. **Infrastructure as code (about 1 day).** Bicep in the repo for the resource group, registry, Container Apps environment, Postgres, Key Vault and Log Analytics. A GitHub Actions workflow logs in to Azure with OIDC, builds the image and deploys it. *Check:* the current UI-only build runs on the Azure URL and `/api/health` returns 200.
 2. **Plain Postgres and data layer (2 to 3 days).** Port the migrations, add Kysely and replace the supabase-js calls area by area, keeping the existing tests green. *Check:* all dashboard tests pass, and a local run against Postgres in Docker can create a course and a course code.
-3. **Auth.js sign-in (about 2 days).** Google and GitHub providers, the allow list in the `signIn` callback, GitHub token storage, and removing Supabase from `middleware.ts` and the callback route. *Check:* a `@stu.istinye.edu.tr` account and one admin account sign in, and an outside account is refused.
+3. **Auth.js sign-in (about 2 days).** Microsoft Entra ID, Google and GitHub providers, the tenant check and allow list in the `signIn` callback, GitHub token storage, and removing Supabase from `middleware.ts` and the callback route. *Check:* a `@stu.istinye.edu.tr` account and one admin account sign in, and an outside account is refused.
 4. **Domain and staging run (about 1 day).** Add the Route 53 records, bind the certificate, and set the OAuth callback URLs. *Check:* a full pass on `https://job191.yeterly.ai`. Sign in, link GitHub, add two PRs, submit, let the worker grade, then release as an instructor.
 5. **Go live (half a day).** Create the Job191 course record and course code, add staff, replace the Railway and UCSC setup docs with an Azure guide, and fill `<APP_URL>` in the student instructions. *Check:* the first real student submission goes through.
 
 ## Open questions and risks
 
-- [ ] **Student accounts:** are `@stu.istinye.edu.tr` accounts Google Workspace or Microsoft 365? This decides the sign-in provider.
+- [ ] **Student accounts:** Istinye accounts are on Microsoft 365, so students sign in with Entra ID. Still needed: Istinye's tenant ID, and whether university IT must approve the app (admin consent) before students can sign in.
 - [ ] **Azure:** which subscription and resource group, and is Germany West Central acceptable? Azure has no Turkey region. A European region keeps latency low, but KVKK rules on transferring student data abroad should be confirmed.
 - [ ] **Route 53:** is yeterly.ai already a hosted zone there, and who can add records?
 - [ ] **Grader model:** keep OpenAI `gpt-4o` with a Yeterly key, or move to Azure OpenAI? Azure OpenAI keeps data in the same tenant but needs a small client change.
