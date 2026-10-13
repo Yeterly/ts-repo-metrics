@@ -73,6 +73,7 @@ export function microsoftTenantOf(data: IdentityData | undefined): string | null
  * The email of a signed-in user the course allows, lowercased, or null.
  * Google: the address must be verified. Microsoft (`azure`): Entra does not mark emails verified,
  * so the identity must come from the configured tenant instead; with no tenant configured, Microsoft is refused.
+ * Email code (`email`): the user proved the inbox by entering the emailed code, so the account email must be confirmed.
  */
 export function verifiedUcscGoogleEmail(user: User | null, env: NodeJS.ProcessEnv = process.env): string | null {
   if (!user) return null;
@@ -83,6 +84,7 @@ export function verifiedUcscGoogleEmail(user: User | null, env: NodeJS.ProcessEn
     if (typeof email !== "string" || !isAllowedCourseEmail(email, env)) continue;
     if (identity.provider === "google" && data?.email_verified === true) return email.toLowerCase();
     if (identity.provider === "azure" && tenant && microsoftTenantOf(data) === tenant) return email.toLowerCase();
+    if (identity.provider === "email" && user.email_confirmed_at && user.email?.toLowerCase() === email.toLowerCase()) return email.toLowerCase();
   }
   return null;
 }

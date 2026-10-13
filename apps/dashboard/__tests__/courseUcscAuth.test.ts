@@ -89,3 +89,24 @@ describe("Microsoft (Entra ID) sign-in", () => {
     expect(microsoftTenantOf({ iss: "https://evil.example/" + tenant })).toBeNull();
   });
 });
+
+describe("Emailed sign-in code", () => {
+  const env = {
+    CSE115A_ALLOWED_EMAIL_DOMAINS: "stu.istinye.edu.tr",
+    CSE115A_ADMIN_EMAILS: "admin@example.com",
+  } as unknown as NodeJS.ProcessEnv;
+  function emailUser(email: string, confirmedAt: string | null, accountEmail = email): User {
+    return { email: accountEmail, email_confirmed_at: confirmedAt ?? undefined, identities: [{ provider: "email", identity_data: { email } }] } as unknown as User;
+  }
+
+  it("accepts a confirmed address on the allow list", () => {
+    expect(verifiedUcscGoogleEmail(emailUser("Ogrenci@stu.istinye.edu.tr", "2026-10-13T11:00:00Z"), env)).toBe("ogrenci@stu.istinye.edu.tr");
+    expect(verifiedUcscGoogleEmail(emailUser("admin@example.com", "2026-10-13T11:00:00Z"), env)).toBe("admin@example.com");
+  });
+
+  it("rejects an unconfirmed address, another domain, or a mismatched account email", () => {
+    expect(verifiedUcscGoogleEmail(emailUser("ogrenci@stu.istinye.edu.tr", null), env)).toBeNull();
+    expect(verifiedUcscGoogleEmail(emailUser("someone@gmail.com", "2026-10-13T11:00:00Z"), env)).toBeNull();
+    expect(verifiedUcscGoogleEmail(emailUser("ogrenci@stu.istinye.edu.tr", "2026-10-13T11:00:00Z", "other@gmail.com"), env)).toBeNull();
+  });
+});

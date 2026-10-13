@@ -8,7 +8,7 @@ Run the existing Docker image on Azure Container Apps, keep Supabase (a new Job1
 
 - **Keep Supabase.** It already handles Google, GitHub and Microsoft sign-in, sessions, Postgres and row-level security. Replacing it would have cost 7 to 10 developer days. Use the Pro plan for the live course (about $25 a month: no pausing, daily backups). The free plan pauses after a week without activity and has no backups, so use it only for testing.
 - **Hosting:** Azure Container Apps, with two apps built from the repo's existing `Dockerfile`: the web app (1 to 3 replicas) and one grading worker (`CSE115A_WORKER=true`, exactly 1 replica).
-- **Sign-in:** Microsoft (the Supabase `azure` provider) for students, restricted to Istinye's tenant. Google for staff on other domains who are on the admin list. GitHub for repository access.
+- **Sign-in:** Microsoft (the Supabase `azure` provider) for students, restricted to Istinye's tenant, with a one-time code emailed to the student's university address as the fallback. Google for staff on other domains who are on the admin list. GitHub for repository access. None of this needs Istinye IT.
 - **Domain:** job191.yeterly.ai, a CNAME in AWS Route 53, with a free managed certificate from Container Apps.
 
 ## Architecture
@@ -47,13 +47,19 @@ These are approximate list prices and need checking for the chosen region. OpenA
 1. **Region:** an EU region such as Frankfurt, for student data.
 2. **Schema:** apply the migrations in `supabase/migrations/` in order. Either `supabase link --project-ref <ref>` then `supabase db push`, or paste each file into the SQL editor oldest first.
 3. **Microsoft provider (students):**
-   - In Microsoft Entra (Istinye's tenant, or a Yeterly app registration that Istinye IT approves), register a web app with the redirect URI `https://<project-ref>.supabase.co/auth/v1/callback`, and create a client secret.
-   - In Supabase **Authentication > Providers > Azure**, enable it, paste the client ID and secret, and set **Azure Tenant URL** to `https://login.microsoftonline.com/<Istinye tenant ID>`.
-   - Set `CSE115A_MICROSOFT_TENANT_ID=<Istinye tenant ID>` on the app. The app refuses Microsoft accounts from any other tenant, and refuses Microsoft entirely if this is not set.
-4. **Google provider (staff):** a Google OAuth client with the same Supabase callback URL.
-5. **GitHub provider:** a GitHub OAuth app owned by Yeterly, with the same Supabase callback URL.
-6. **Auth settings:** turn on **manual identity linking**. Set **Site URL** to `https://job191.yeterly.ai`, and add `https://job191.yeterly.ai/auth/callback` and `http://localhost:3015/auth/callback` to the redirect URLs.
-7. **Course data:** insert the Job191 row in `cse_courses` with the Job191 title, add `cse_sprints` due dates, then run `apps/dashboard/scripts/createCourseCode.mjs` and `addCourseStaff.mjs`.
+   - Istinye's tenant ID is `8f3fdacc-a839-4a7d-a9c8-36b7cb8df4a2` (public; both @stu.istinye.edu.tr and @istinye.edu.tr are in it).
+   - In Yeterly's own Microsoft Entra, register a web app as **multitenant** ("Accounts in any organizational directory") with the redirect URI `https://<project-ref>.supabase.co/auth/v1/callback`, and create a client secret.
+   - In Supabase **Authentication > Providers > Azure**, enable it, paste the client ID and secret, and set **Azure Tenant URL** to `https://login.microsoftonline.com/8f3fdacc-a839-4a7d-a9c8-36b7cb8df4a2`.
+   - Set `CSE115A_MICROSOFT_TENANT_ID=8f3fdacc-a839-4a7d-a9c8-36b7cb8df4a2` on the app. The app refuses Microsoft accounts from any other tenant, and refuses Microsoft entirely if this is not set.
+   - Each student approves the app on first sign-in. If Istinye blocks user consent, students see "Need admin approval" and use the emailed code instead.
+4. **Emailed code (student fallback):**
+   - Set up a sending service as custom SMTP in **Authentication > Emails > SMTP settings**, for example Amazon SES with a `no-reply@yeterly.ai` sender and its SPF and DKIM records in Route 53. Supabase's built-in mailer is for testing only.
+   - Edit the **Magic Link** and **Confirm signup** email templates to show the code, `{{ .Token }}`, instead of a link. The app asks students to type the code.
+   - Keep the Email provider enabled. The app accepts an emailed-code sign-in only for a confirmed address on the allow list.
+5. **Google provider (staff):** a Google OAuth client with the same Supabase callback URL.
+6. **GitHub provider:** a GitHub OAuth app owned by Yeterly, with the same Supabase callback URL.
+7. **Auth settings:** turn on **manual identity linking**. Set **Site URL** to `https://job191.yeterly.ai`, and add `https://job191.yeterly.ai/auth/callback` and `http://localhost:3015/auth/callback` to the redirect URLs.
+8. **Course data:** insert the Job191 row in `cse_courses` with the Job191 title, add `cse_sprints` due dates, then run `apps/dashboard/scripts/createCourseCode.mjs` and `addCourseStaff.mjs`.
 
 ## Environment variables
 
@@ -70,7 +76,7 @@ These are approximate list prices and need checking for the chosen region. OpenA
 | `CSE115A_ALLOWED_EMAIL_DOMAINS` | runtime | `stu.istinye.edu.tr` |
 | `NEXT_PUBLIC_CSE115A_ALLOWED_EMAIL_DOMAINS` | build argument | `stu.istinye.edu.tr` |
 | `CSE115A_ADMIN_EMAILS` | runtime | the three admin emails |
-| `CSE115A_MICROSOFT_TENANT_ID` | runtime | Istinye's tenant ID |
+| `CSE115A_MICROSOFT_TENANT_ID` | runtime | `8f3fdacc-a839-4a7d-a9c8-36b7cb8df4a2` |
 | `NEXT_PUBLIC_COURSE_*` | build argument | optional overrides |
 
 `NEXT_PUBLIC_*` values are inlined at build time, so they must be passed as Docker build arguments. The current `Dockerfile` declares only the two Supabase ones, so the course ones need adding there too.
@@ -96,8 +102,9 @@ These are approximate list prices and need checking for the chosen region. OpenA
 
 ## Open questions
 
-- [ ] **Tenant ID:** Istinye's Microsoft 365 tenant ID.
-- [ ] **App approval:** does Istinye IT need to approve the app (admin consent) before students can sign in? Many universities block unapproved apps by default.
+- [x] **Tenant ID:** `8f3fdacc-a839-4a7d-a9c8-36b7cb8df4a2`, found from Microsoft's public endpoints.
+- [ ] **Consent test:** one student signs in with Microsoft. If they see "Need admin approval", students use the emailed code.
+- [ ] **Email delivery:** send one code to a student mailbox and check it isn't filtered as junk.
 - [ ] **Azure:** which subscription and resource group, and which region? Azure has no Turkey region; KVKK rules on student data abroad should be confirmed.
 - [ ] **Route 53:** is yeterly.ai already a hosted zone there, and who can add records?
 - [ ] **Research consent:** the consent text is still a UCSC IRB placeholder, so the benchmark export stays off until Istinye-approved wording is in place.
