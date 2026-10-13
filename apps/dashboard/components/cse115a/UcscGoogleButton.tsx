@@ -136,8 +136,14 @@ function EmailCodeSignIn({ fullWidth, domain }: { fullWidth: boolean; domain: st
     setBusy(true);
     setError(null);
     try {
-      const { error: sendError } = await createUserSupabaseBrowserClient().auth.signInWithOtp({ email: address, options: { shouldCreateUser: true } });
-      if (sendError) setError(sendError.message);
+      // The server checks the allow list before Supabase sends anything.
+      const response = await fetch("/api/cse115a/email-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: address }),
+      });
+      const body = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) setError(body.error ?? "Could not send the code. Please try again.");
       else setSentTo(address);
     } catch {
       setError("Could not send the code. Please try again.");
