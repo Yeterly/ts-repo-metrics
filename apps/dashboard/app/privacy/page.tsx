@@ -37,7 +37,7 @@ export default function PrivacyPage() {
         <div className="space-y-3">
           <h3 className="font-semibold">{COURSE_NAME} account and assignments</h3>
           <p className="leading-relaxed text-muted-foreground">
-            The {COURSE_SHORT_NAME} app uses Microsoft sign-in to verify your {COURSE_UNIVERSITY} email address (course staff may use Google).
+            The {COURSE_SHORT_NAME} app uses Microsoft sign-in, or a code emailed to you, to verify your {COURSE_UNIVERSITY} email address.
             It stores that address with your course membership. When you submit a
             task PR, it stores the PR link, the committed task specification,
             process-check results, and the linked Repo Metrics analysis. Course
