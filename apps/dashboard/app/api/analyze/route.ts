@@ -166,7 +166,8 @@ export async function POST(request: NextRequest) {
 
     // Reject unknown course IDs — only allow-listed sections may tag submissions.
     // Submissions with no course_id (plain /analyze usage) pass through unchanged.
-    const managedCourse = courseIdVal && /^CSE115A-(?:Winter|Spring|Summer|Fall)\d{2}$/.test(courseIdVal)
+    // Any course in cse_courses with a term suffix (CSE115A-Fall26, Job191-Fall26, ...) is checked against enrollment.
+    const managedCourse = courseIdVal && /^[A-Za-z0-9]+-(?:Winter|Spring|Summer|Fall)\d{2}$/.test(courseIdVal)
       ? await getEnrolledCourse(authUser.id, courseIdVal)
       : null;
     if (courseIdVal !== null && !ALLOWED_COURSE_IDS.has(courseIdVal) && !managedCourse) {
