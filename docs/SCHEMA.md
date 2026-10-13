@@ -31,7 +31,7 @@ This document describes the complete JSON report produced by `ts-repo-metrics` (
 | `python` | `PythonMetrics` | **yes** | Python type hints and top-level code; present when `.py` or `.ipynb` files were scored |
 | `backendMetrics` | `BackendMetrics` | **yes** | Flask / FastAPI route handlers; present when at least one was found |
 | `reactMetrics` | `ReactMetricsReport` | **yes** | RQ3 React/TSX static metrics (present when at least one `.tsx` file was analyzed) |
-| `phase3` | `Phase3Metrics` | **yes** | Phase 3 — silent failures (React-scope JS/TS and all Python), monolithic component rate, weighted jscpd redundancy |
+| `phase3` | `Phase3Metrics` | **yes** | Phase 3 — silent failures (React-scope JS/TS and non-test Python), monolithic component rate, weighted jscpd redundancy |
 
 ## `distributions` — Distribution Metrics (optional)
 
@@ -324,7 +324,7 @@ Present when at least one `.tsx` file was successfully parsed. Heuristic **compo
 
 ## `phase3` — AI smell / pathology (optional)
 
-Present when the analyzer build includes Phase 3. **Silent failure** events come from JS/TS files in React scope (empty `catch`, or a `catch` that only logs to console) and from every Python file and notebook (an `except` whose body is only `pass`, `...`, or `continue`, or only `print`, `logging.*`, `logger.*`, or `traceback.print_exc()`). An `except` that also raises or does other work is not an event. Including Python changes `sfd` on any repo with Python. **SRS** uses jscpd duplicate pairs with per-pair similarity (file excerpt + Levenshtein ratio when fragments are unavailable); see [METRICS_CONCEPTS.md](METRICS_CONCEPTS.md).
+Present when the analyzer build includes Phase 3. **Silent failure** events come from JS/TS files in React scope (empty `catch`, or a `catch` that only logs to console) and from every non-test Python file and notebook (an `except` whose body is only `pass`, `...`, or `continue`, or only `print`, `logging.*`, `logger.*`, or `traceback.print_exc()`). An `except` that also raises or does other work is not an event. Including Python changes `sfd` on any repo with Python. **SRS** uses jscpd duplicate pairs with per-pair similarity (file excerpt + Levenshtein ratio when fragments are unavailable); see [METRICS_CONCEPTS.md](METRICS_CONCEPTS.md).
 
 ### `SilentFailureEvent`
 
