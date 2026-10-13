@@ -23,7 +23,7 @@ function listFromEnv(value: string | undefined): string[] {
   return (value ?? "").split(",").map((item) => item.trim().toLowerCase().replace(/^@/, "")).filter(Boolean);
 }
 
-/** Email domains whose verified Google accounts may sign in (`CSE115A_ALLOWED_EMAIL_DOMAINS`, default `ucsc.edu`). */
+/** Email domains whose accounts may sign in (`CSE115A_ALLOWED_EMAIL_DOMAINS`, default `ucsc.edu`). */
 export function courseAllowedDomains(env: NodeJS.ProcessEnv = process.env): string[] {
   const domains = listFromEnv(env.CSE115A_ALLOWED_EMAIL_DOMAINS);
   return domains.length ? domains : DEFAULT_ALLOWED_DOMAINS;
@@ -52,14 +52,37 @@ export function courseGoogleHostedDomain(env: NodeJS.ProcessEnv = process.env): 
   return domains.length === 1 ? domains[0] : null;
 }
 
+/** The Istinye (or other) Microsoft Entra tenant whose accounts may sign in (`CSE115A_MICROSOFT_TENANT_ID`). */
+export function courseMicrosoftTenantId(env: NodeJS.ProcessEnv = process.env): string | null {
+  return env.CSE115A_MICROSOFT_TENANT_ID?.trim().toLowerCase() || null;
+}
+
+type IdentityData = Record<string, unknown> & { custom_claims?: Record<string, unknown> };
+
+/** The Entra tenant an `azure` identity came from: the `tid` claim, or the tenant in the issuer URL. */
+export function microsoftTenantOf(data: IdentityData | undefined): string | null {
+  if (!data) return null;
+  const tid = data.custom_claims?.tid ?? data.tid;
+  if (typeof tid === "string" && tid) return tid.toLowerCase();
+  const iss = typeof data.iss === "string" ? data.iss : "";
+  const match = /^https:\/\/(?:login\.microsoftonline\.com|sts\.windows\.net)\/([0-9a-f-]{36})\b/i.exec(iss);
+  return match ? match[1].toLowerCase() : null;
+}
+
+/**
+ * The email of a signed-in user the course allows, lowercased, or null.
+ * Google: the address must be verified. Microsoft (`azure`): Entra does not mark emails verified,
+ * so the identity must come from the configured tenant instead; with no tenant configured, Microsoft is refused.
+ */
 export function verifiedUcscGoogleEmail(user: User | null, env: NodeJS.ProcessEnv = process.env): string | null {
   if (!user) return null;
+  const tenant = courseMicrosoftTenantId(env);
   for (const identity of user.identities ?? []) {
-    if (identity.provider !== "google") continue;
-    const email = identity.identity_data?.email;
+    const data = identity.identity_data as IdentityData | undefined;
+    const email = data?.email;
     if (typeof email !== "string" || !isAllowedCourseEmail(email, env)) continue;
-    if (identity.identity_data?.email_verified !== true) continue;
-    return email.toLowerCase();
+    if (identity.provider === "google" && data?.email_verified === true) return email.toLowerCase();
+    if (identity.provider === "azure" && tenant && microsoftTenantOf(data) === tenant) return email.toLowerCase();
   }
   return null;
 }

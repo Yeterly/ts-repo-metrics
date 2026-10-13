@@ -84,8 +84,10 @@ export async function GET(request: Request) {
     return redirectWithClearedNextCookie(origin, `${nextPath}?auth_error=ucsc_google_required`);
   }
 
+  // Only a GitHub sign-in's provider token is a GitHub token; Google and Microsoft tokens are never stored.
+  const isGitHubToken = oauthProvider !== "google" && oauthProvider !== "azure";
   if (
-    oauthProvider !== "google" &&
+    isGitHubToken &&
     providerToken &&
     isSupabaseConfigured() &&
     isGitHubTokenEncryptionConfigured()
@@ -103,7 +105,7 @@ export async function GET(request: Request) {
     } catch (err) {
       console.error("[auth/callback] Failed to persist GitHub token:", err);
     }
-  } else if (oauthProvider !== "google" && providerToken && !isGitHubTokenEncryptionConfigured()) {
+  } else if (isGitHubToken && providerToken && !isGitHubTokenEncryptionConfigured()) {
     console.warn(
       "[auth/callback] GITHUB_OAUTH_ENCRYPTION_KEY not set; GitHub token not stored.",
     );

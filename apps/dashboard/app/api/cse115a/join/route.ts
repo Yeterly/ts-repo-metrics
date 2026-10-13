@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) return NextResponse.json({ error: "Course storage is not configured." }, { status: 503 });
   const identity = await getCourseIdentity();
-  if (!identity) return NextResponse.json({ error: "Sign in with a verified Istinye University Google account." }, { status: 401 });
+  if (!identity) return NextResponse.json({ error: "Sign in with your Istinye University Microsoft account." }, { status: 401 });
   const body = await request.json().catch(() => null) as { code?: unknown } | null;
   const code = typeof body?.code === "string" ? body.code.toUpperCase().replace(/[\s-]/g, "") : "";
   if (!/^[A-Z2-9]{8,24}$/.test(code)) {

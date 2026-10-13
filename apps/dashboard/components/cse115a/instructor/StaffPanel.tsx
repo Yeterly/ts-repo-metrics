@@ -46,7 +46,7 @@ export function StaffPanel({ slug }: { slug: string }) {
       <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-primary">{data.course.title} · {data.course.term}</p>
         <h1 className="mt-1 text-2xl font-semibold">Staff</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Staff sign in with their Istinye University Google account, or an admin email. TAs can review, edit, release, and regrade. Only instructors can unlock submissions and manage staff.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Staff sign in with their Istinye University Microsoft account, or with Google if their email is on the admin list. TAs can review, edit, release, and regrade. Only instructors can unlock submissions and manage staff.</p>
       </div>
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
       <ul className="divide-y divide-border rounded-xl border border-border bg-card">

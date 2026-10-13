@@ -8,6 +8,6 @@ export const runtime = "nodejs";
 export async function GET() {
   if (!isSupabaseConfigured()) return NextResponse.json({ error: "Storage is not configured." }, { status: 503 });
   const identity = await getCourseIdentity();
-  if (!identity) return NextResponse.json({ error: "Sign in with your Istinye University Google account." }, { status: 401 });
+  if (!identity) return NextResponse.json({ error: "Sign in with your Istinye University Microsoft account." }, { status: 401 });
   return NextResponse.json({ connected: Boolean(await getDecryptedGitHubTokenForUser(identity.userId)) });
 }

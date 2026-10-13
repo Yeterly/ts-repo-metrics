@@ -45,15 +45,15 @@ export function stashOAuthNextPath(nextPath: string): void {
   document.cookie = `${OAUTH_NEXT_COOKIE}=${value}; path=/; max-age=${OAUTH_NEXT_MAX_AGE_SEC}; SameSite=Lax`;
 }
 
-export function stashOAuthProvider(provider: "github" | "google"): void {
+export function stashOAuthProvider(provider: "github" | "google" | "azure"): void {
   if (typeof document === "undefined") return;
   document.cookie = `${OAUTH_PROVIDER_COOKIE}=${provider}; path=/; max-age=${OAUTH_NEXT_MAX_AGE_SEC}; SameSite=Lax`;
 }
 
-export function readOAuthProviderFromCookie(cookieHeader: string | null): "github" | "google" | null {
+export function readOAuthProviderFromCookie(cookieHeader: string | null): "github" | "google" | "azure" | null {
   if (!cookieHeader) return null;
   const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${OAUTH_PROVIDER_COOKIE}=([^;]*)`));
-  return match?.[1] === "github" || match?.[1] === "google" ? match[1] : null;
+  return match?.[1] === "github" || match?.[1] === "google" || match?.[1] === "azure" ? match[1] : null;
 }
 
 export function readOAuthNextPathFromCookie(cookieHeader: string | null): string {

@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
     }
     if (courseIdVal && (managedCourse || CSE115A_FALL_COURSE_IDS.has(courseIdVal)) && !verifiedUcscGoogleEmail(authUser)) {
       return NextResponse.json(
-        { error: "Sign in with your Istinye University Google account before analyzing this assignment.", code: "ucsc_google_required" },
+        { error: "Sign in with your Istinye University Microsoft account before analyzing this assignment.", code: "ucsc_google_required" },
         { status: 403 },
       );
     }

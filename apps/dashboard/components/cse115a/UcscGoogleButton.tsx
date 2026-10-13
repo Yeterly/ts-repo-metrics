@@ -5,6 +5,8 @@ import { createUserSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { isBrowserSupabaseConfigured } from "@/lib/supabase/browserConfigured";
 import { buildOAuthCallbackUrl, getOAuthRedirectOrigin, stashOAuthNextPath, stashOAuthProvider } from "@/lib/oauthRedirectOrigin";
 
+type Provider = "azure" | "google";
+
 function GoogleMark() {
   return (
     <svg viewBox="0 0 48 48" aria-hidden="true" className="size-5 shrink-0">
@@ -16,65 +18,99 @@ function GoogleMark() {
   );
 }
 
+function MicrosoftMark() {
+  return (
+    <svg viewBox="0 0 21 21" aria-hidden="true" className="size-5 shrink-0">
+      <path fill="#F25022" d="M1 1h9v9H1z" />
+      <path fill="#7FBA00" d="M11 1h9v9h-9z" />
+      <path fill="#00A4EF" d="M1 11h9v9H1z" />
+      <path fill="#FFB900" d="M11 11h9v9h-9z" />
+    </svg>
+  );
+}
+
+type Availability = { googleEnabled: boolean | null; microsoftEnabled: boolean | null; hostedDomain: string | null };
+
+/** Course sign-in: Microsoft for students (university tenant), Google for staff on other domains. */
 export function UcscGoogleButton({ fullWidth = false }: { fullWidth?: boolean }) {
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<Provider | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [googleEnabled, setGoogleEnabled] = useState<boolean | null>(null);
-  const [hostedDomain, setHostedDomain] = useState<string | null>(null);
+  const [availability, setAvailability] = useState<Availability | null>(null);
   const [availabilityError, setAvailabilityError] = useState(false);
   useEffect(() => {
     let active = true;
     void fetch("/api/cse115a/auth-availability")
       .then((response) => response.json())
-      .then((body: { googleEnabled?: boolean | null; hostedDomain?: string | null }) => {
+      .then((body: Partial<Availability>) => {
         if (!active) return;
-        setGoogleEnabled(body.googleEnabled ?? null);
-        setHostedDomain(body.hostedDomain ?? null);
+        setAvailability({
+          googleEnabled: body.googleEnabled ?? null,
+          microsoftEnabled: body.microsoftEnabled ?? null,
+          hostedDomain: body.hostedDomain ?? null,
+        });
       })
       .catch(() => { if (active) setAvailabilityError(true); });
     return () => { active = false; };
   }, []);
-  async function begin() {
-    if (googleEnabled !== true) {
-      setError("Google sign in has not been enabled for this preview yet.");
+
+  async function begin(provider: Provider) {
+    const enabled = provider === "azure" ? availability?.microsoftEnabled : availability?.googleEnabled;
+    const name = provider === "azure" ? "Microsoft" : "Google";
+    if (enabled !== true) {
+      setError(`${name} sign in has not been enabled yet.`);
       return;
     }
     if (!isBrowserSupabaseConfigured()) {
       setError("Sign in is not configured for this preview.");
       return;
     }
-    setBusy(true);
+    setBusy(provider);
     setError(null);
     try {
       const supabase = createUserSupabaseBrowserClient();
       const { data: { user } } = await supabase.auth.getUser();
       stashOAuthNextPath("/cse115a/dashboard");
-      stashOAuthProvider("google");
-      const options = {
-        redirectTo: buildOAuthCallbackUrl(getOAuthRedirectOrigin()),
-        queryParams: { prompt: "select_account", ...(hostedDomain ? { hd: hostedDomain } : {}) } as Record<string, string>,
-      };
-      const result = user?.identities?.some((identity) => identity.provider === "google")
-        ? await supabase.auth.signInWithOAuth({ provider: "google", options })
+      stashOAuthProvider(provider);
+      const hint = availability?.hostedDomain;
+      const options = provider === "azure"
+        ? {
+          redirectTo: buildOAuthCallbackUrl(getOAuthRedirectOrigin()),
+          scopes: "email openid profile",
+          queryParams: { prompt: "select_account", ...(hint ? { domain_hint: hint } : {}) } as Record<string, string>,
+        }
+        : {
+          redirectTo: buildOAuthCallbackUrl(getOAuthRedirectOrigin()),
+          queryParams: { prompt: "select_account" } as Record<string, string>,
+        };
+      const result = user?.identities?.some((identity) => identity.provider === provider)
+        ? await supabase.auth.signInWithOAuth({ provider, options })
         : user
-          ? await supabase.auth.linkIdentity({ provider: "google", options })
-          : await supabase.auth.signInWithOAuth({ provider: "google", options });
+          ? await supabase.auth.linkIdentity({ provider, options })
+          : await supabase.auth.signInWithOAuth({ provider, options });
       if (result.error) setError(result.error.message);
     } catch {
-      setError("Could not start Google sign in. Please try again.");
+      setError(`Could not start ${name} sign in. Please try again.`);
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
+
   const statusClass = fullWidth ? "text-sm text-slate-600" : "text-sm text-muted-foreground";
+  const width = fullWidth ? "flex w-full" : "inline-flex";
   return (
     <div className={fullWidth ? "space-y-3" : "space-y-3 text-center"}>
-      <button type="button" onClick={() => void begin()} disabled={busy || googleEnabled !== true} className={`${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-50`}>
-        <GoogleMark />
-        {busy ? "Opening Google…" : "Continue with Google"}
+      <button type="button" onClick={() => void begin("azure")} disabled={busy !== null || availability?.microsoftEnabled !== true} className={`${width} items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-50`}>
+        <MicrosoftMark />
+        {busy === "azure" ? "Opening Microsoft…" : "Continue with Microsoft"}
       </button>
-      {googleEnabled === null ? <p className={statusClass}>{availabilityError ? "Could not check Google sign in availability. Refresh and try again." : "Checking Google sign in availability…"}</p> : null}
-      {googleEnabled === false ? <p className={fullWidth ? "text-sm text-amber-800" : "text-sm text-amber-700 dark:text-amber-300"}>Google sign in needs to be enabled in Supabase before students can continue.</p> : null}
+      <div>
+        <button type="button" onClick={() => void begin("google")} disabled={busy !== null || availability?.googleEnabled !== true} className={`${width} items-center justify-center gap-2 px-3 py-1 text-sm text-slate-600 underline-offset-4 hover:underline disabled:opacity-50`}>
+          <GoogleMark />
+          {busy === "google" ? "Opening Google…" : "Course staff: continue with Google"}
+        </button>
+      </div>
+      {availability === null ? <p className={statusClass}>{availabilityError ? "Could not check sign in availability. Refresh and try again." : "Checking sign in availability…"}</p> : null}
+      {availability?.microsoftEnabled === false ? <p className={fullWidth ? "text-sm text-amber-800" : "text-sm text-amber-700 dark:text-amber-300"}>Microsoft sign in needs to be enabled in Supabase, with the university tenant set in CSE115A_MICROSOFT_TENANT_ID, before students can continue.</p> : null}
       {error ? <p role="alert" className={fullWidth ? "text-sm text-red-700" : "text-sm text-red-600 dark:text-red-400"}>{error}</p> : null}
     </div>
   );

@@ -25,7 +25,7 @@ type GitHubPull = {
 export async function GET(_request: Request, { params }: Params) {
   if (!isSupabaseConfigured()) return NextResponse.json({ error: "Course storage is not configured." }, { status: 503 });
   const identity = await getCourseIdentity();
-  if (!identity) return NextResponse.json({ error: "Sign in with your Istinye University Google account." }, { status: 401 });
+  if (!identity) return NextResponse.json({ error: "Sign in with your Istinye University Microsoft account." }, { status: 401 });
   const { number, slot } = await params;
   const assignmentNumber = Number(number);
   const taskSlot = Number(slot);
