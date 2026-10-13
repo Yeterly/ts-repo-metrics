@@ -1,125 +1,132 @@
-# Azure deployment plan (Job191, Istinye University)
+# Job191 Repo Metrics: Azure deployment plan
 
-Status: proposal. Nothing here is built yet. Target URL: `https://job191.yeterly.ai`.
+Proposed 2026-10-13. Status: plan, not started. Editable copy: [shared doc](https://claude.ai/code/artifact/bb69a0a0-d31a-4f63-8797-ee2dd92ffda3).
 
-Goal: run the course app on Azure, replace Supabase (auth and database), and serve it at
-`job191.yeterly.ai` with DNS in AWS Route 53.
+Run the existing Docker image on Azure Container Apps, move the data to Azure Database for PostgreSQL, and replace Supabase Auth with Auth.js inside the app. Point job191.yeterly.ai at it with a CNAME in Route 53. The code is the Yeterly fork of ts-repo-metrics, branch feat/cse115a-g05fb9 (commit 4ad1626).
+
+## Summary
+
+- **Hosting:** Azure Container Apps, with two apps built from the image that already exists: the web app, and one grading worker.
+- **Database:** Azure Database for PostgreSQL Flexible Server. The 11 existing SQL migrations carry over almost unchanged once the Supabase-only parts are removed.
+- **Sign-in:** Auth.js (NextAuth v5) in the Next.js app, with Google for the student and admin accounts and GitHub for repository access. Sessions and linked accounts are stored in the same Postgres database.
+- **Secrets:** Azure Key Vault, read by the apps through a managed identity.
+- **Domain:** job191.yeterly.ai, a CNAME in AWS Route 53, with a free managed certificate from Container Apps.
+- **Biggest piece of work:** replacing the Supabase client calls in about 55 files. Rough estimate: 5 to 8 developer days, plus 2 for infrastructure and testing.
 
 ## What Supabase does today
 
-- **Auth.** Google sign-in for students, GitHub OAuth linked to the same account
-  (`linkIdentity`), cookie sessions (`middleware.ts`, `app/auth/callback/route.ts`), and the
-  GitHub `provider_token`, which the app encrypts into `user_github_tokens`.
-- **Database.** Postgres with 16 tables (`analyses`, `cse_*`, `user_github_tokens`), 11
-  migrations in `supabase/migrations/`, and 4 SQL functions: `submit_cse_assignment`,
-  `release_cse_assignment_submission`, `requeue_cse_grading_job`, `claim_cse_grading_job`.
-- **Client.** About 45 files query through `supabase-js`. Most use the service-role client
-  (`getSupabase()`). Eight use the signed-in user's client and rely on RLS:
-  `api/ai-usage`, `api/analyze`, `api/doc-review`, `api/results/[id]` (and its `ai-usage`,
-  `doc-review`), `lib/cse115a/server.ts`, `lib/getReportById.ts`.
-- **Supabase-specific SQL.** Foreign keys to `auth.users`, and RLS policies using
-  `auth.uid()` and the `authenticated` role.
-- Not used: Supabase Storage, Realtime.
+The app uses Supabase for two things, sign-in and Postgres. It does not use Supabase file storage or realtime, so nothing else needs replacing.
 
-## Target architecture
-
-One region. Proposed: Germany West Central or West Europe. Azure has no Turkey region, and
-student data falls under KVKK, so confirm the region with the university.
-
-| Piece | Azure service | Notes |
-|---|---|---|
-| Web app | Container Apps, app `web` | Existing `Dockerfile` (Next.js standalone, `git` in the image). Scale 1–3. Health probe `/api/health`. |
-| Grading worker | Container Apps, app `worker` | Same image, `CSE115A_WORKER=true`, exactly 1 replica. |
-| Database | PostgreSQL Flexible Server | Burstable B1ms to start, private access, automated backups. |
-| Secrets | Key Vault | Read by the apps through a managed identity. |
-| Images | Container Registry | Basic tier. |
-| Logs | Log Analytics, Application Insights | |
-| CI/CD | GitHub Actions | OIDC federated login (no stored Azure secret). Build, push to ACR, deploy. A Container Apps job runs migrations. |
-
-Rough monthly cost at class scale: about $40–70 (Postgres $15–25, Container Apps $0–30,
-ACR $5, Key Vault and logs a few dollars). OpenAI grading calls are extra.
+| Area | How the app uses it | Where in the code |
+| --- | --- | --- |
+| Google sign-in | `signInWithOAuth` and `linkIdentity` for Google, then a check that the email is verified and on the allow list | `UcscGoogleButton.tsx`, `auth/callback/route.ts`, `lib/courseUcscAuth.ts` |
+| GitHub link | GitHub OAuth linked to the same user. The provider token is saved encrypted in `user_github_tokens` so the app can read private PRs | `auth/callback/route.ts`, `GITHUB_OAUTH_ENCRYPTION_KEY` |
+| Sessions | Cookie session refreshed in `middleware.ts`, read with `auth.getUser()` (13 call sites) | `middleware.ts`, `lib/supabase/*` |
+| Database | 14 tables queried with the supabase-js builder: `analyses`, 12 `cse_*` course tables, `user_github_tokens` | about 55 files |
+| Server access | Most course routes use the service-role key and check identity and membership in code | `lib/cse115a/server.ts`, `instructorApi.ts` |
+| Row-level security | 8 policies that use `auth.uid()`. About 9 API routes use a user-scoped client that relies on them, mostly for `analyses` | `supabase/migrations/*`, `lib/supabase/server-user.ts` |
+| SQL functions | 4 RPC calls: `submit_cse_assignment`, `release_cse_assignment_submission`, `requeue_cse_grading_job`, `claim_cse_grading_job` | grading worker, instructor routes |
+| Schema | 11 migration files (about 500 lines). User columns have foreign keys to `auth.users` | `supabase/migrations/` |
 
 ## Replacing Supabase
 
-### A. Auth: Auth.js (NextAuth v5)
+Supabase is replaced by three parts: Auth.js for sign-in, plain Postgres on Azure for data, and a small typed data layer in the app.
 
-- Providers: Google and GitHub. Users, accounts and sessions in Postgres (Auth.js Postgres
-  adapter).
-- The email allow list (`CSE115A_ALLOWED_EMAIL_DOMAINS`, `CSE115A_ADMIN_EMAILS`,
-  `lib/courseUcscAuth.ts`) moves into the `signIn` callback: verified Google email, exact
-  domain or listed admin.
-- GitHub is linked while signed in. Auth.js stores the access token on the account row; keep
-  encrypting it with `GITHUB_OAUTH_ENCRYPTION_KEY` into `user_github_tokens`, or encrypt the
-  account row directly.
-- Replaces: `signInWithOAuth`/`linkIdentity` in the buttons, `middleware.ts`,
-  `app/auth/callback/route.ts`, `getCourseIdentity`, and the `supabase.auth.getUser` calls.
-- New OAuth apps owned by Yeterly:
-  - Google OAuth client, redirect `https://job191.yeterly.ai/api/auth/callback/google`
-  - GitHub OAuth app, callback `https://job191.yeterly.ai/api/auth/callback/github`
+**Sign-in with Auth.js (NextAuth v5)**
 
-If Istinye students use Microsoft 365 rather than Google Workspace, use the Microsoft Entra ID
-provider instead of Google. The rest of this plan is unchanged.
+- Providers: Google for students and admins, and GitHub for repository access. If Istinye student accounts turn out to be Microsoft 365, the Microsoft Entra ID provider replaces Google, and the rest stays the same.
+- The allow list moves into the Auth.js `signIn` callback. It keeps the current rules: any verified `@stu.istinye.edu.tr` account, the three admin emails from any domain, and everyone else rejected.
+- GitHub is linked to the signed-in user as a second account. Its access token is written to the existing encrypted `user_github_tokens` store.
+- Sessions are stored in the database through the Auth.js Postgres adapter (tables `users`, `accounts`, `sessions`, `verification_token`).
+- This replaces `middleware.ts`, `/auth/callback`, `getCourseIdentity()`, the Google button and the GitHub connect flow.
+- New callback URLs: `https://job191.yeterly.ai/api/auth/callback/google` and `/github`, on a new Google OAuth client and a new GitHub OAuth app owned by Yeterly.
 
-### B. Data access: typed query layer
+**Data access**
 
-- Replace `supabase-js` with Kysely or Drizzle on `node-postgres`, behind small modules per
-  area: courses and memberships, submissions, grading jobs, benchmark, analyses, GitHub tokens.
-- Call the 4 SQL functions directly.
-- About 45 files change, mostly mechanically.
+- Replace supabase-js with Kysely on node-postgres, with one module per area: courses, submissions, grading jobs, benchmark, analyses and tokens. Most changes are mechanical, one builder chain for another.
+- The 4 SQL functions stay in Postgres and are called with `select fn(...)`.
+- Authorization stays in the API routes, which already check identity, course membership and staff roles. The routes that relied on row-level security get explicit `user_id` filters.
 
-### C. Migrations
+**Migrations**
 
-- Make the 11 files plain Postgres: `user_id` references the Auth.js `users` table instead
-  of `auth.users`; drop the `auth.uid()` RLS policies and grants to Supabase roles.
-- Authorization lives in the app. The API routes already check identity, course membership
-  and staff role; audit the 8 RLS-reliant files listed above.
-- Run migrations in order with a small migration tool (for example `node-pg-migrate`), from
-  the CI migration job.
+- Copy the 11 files into a plain Postgres migration folder, run in order by `node-pg-migrate`.
+- Change foreign keys from `auth.users(id)` to the Auth.js `users(id)`.
+- Remove the `auth.uid()` policies and Supabase role grants, and keep the tables, indexes and functions.
+- No data is migrated. Job191 starts with an empty database.
 
-### D. Data
+## Azure architecture
 
-New course, so no data is copied from the UCSC Supabase project.
+```mermaid
+flowchart LR
+  users["Students and staff"] --> r53["AWS Route 53<br/>job191.yeterly.ai CNAME"]
+  r53 -- "HTTPS, managed certificate" --> web
+  subgraph azure["Azure, one region"]
+    web["Web app on Container Apps<br/>Next.js image, 1 to 3 replicas<br/>Auth.js sign-in"]
+    worker["Grading worker on Container Apps<br/>same image, CSE115A_WORKER=true, 1 replica"]
+    pg[("PostgreSQL Flexible Server")]
+    kv["Key Vault<br/>secrets via managed identity"]
+    acr["Container Registry<br/>image built by GitHub Actions"]
+    logs["Log Analytics"]
+    web --> pg
+    worker --> pg
+  end
+  web --> google["Google sign-in"]
+  web --> github["GitHub OAuth and API"]
+  worker --> openai["OpenAI grader model"]
+```
+
+Both apps run the same image and read and write the same Postgres database. Only the worker calls the grader model. The repository's existing Dockerfile and `/api/health` endpoint work on Container Apps as they are.
+
+| Service | Starting size | Approx. monthly cost |
+| --- | --- | --- |
+| Container Apps, web | 1 vCPU, 2 GiB, 1 to 3 replicas | $0 to 30 |
+| Container Apps, worker | 0.5 vCPU, 1 GiB, 1 replica | $10 to 20 |
+| PostgreSQL Flexible Server | Burstable B1ms, 32 GB, backups on | $15 to 25 |
+| Container Registry | Basic | $5 |
+| Key Vault, Log Analytics | pay per use | under $10 |
+
+The total is about $40 to 90 a month at class scale, plus OpenAI grading calls. These are approximate list prices from memory and need checking against the Azure pricing calculator for the chosen region.
 
 ## Environment variables
 
-Remove: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_URL`,
-`SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+- **Remove:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+- **Add:** `DATABASE_URL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`, and `APP_ORIGIN=https://job191.yeterly.ai`.
+- **Keep:** `GITHUB_OAUTH_ENCRYPTION_KEY`, `OPENAI_API_KEY`, `CSE115A_SITE=true`, `CSE115A_WORKER` (worker only), `CSE115A_ALLOWED_EMAIL_DOMAINS`, `NEXT_PUBLIC_CSE115A_ALLOWED_EMAIL_DOMAINS`, `CSE115A_ADMIN_EMAILS`, and the `NEXT_PUBLIC_COURSE_*` names.
+- Secrets live in Key Vault. `NEXT_PUBLIC_*` values are inlined at build time, so they are passed as Docker build arguments.
 
-Add: `DATABASE_URL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_GITHUB_ID`,
-`AUTH_GITHUB_SECRET`, `APP_ORIGIN=https://job191.yeterly.ai`.
+## Domain: job191.yeterly.ai
 
-Keep: `GITHUB_OAUTH_ENCRYPTION_KEY`, `OPENAI_API_KEY`, `CSE115A_SITE=true`,
-`CSE115A_WORKER` (worker only), `CSE115A_ALLOWED_EMAIL_DOMAINS`, `CSE115A_ADMIN_EMAILS`, and
-the `NEXT_PUBLIC_COURSE_*` names. `NEXT_PUBLIC_*` values are inlined at build time, so pass
-them as Docker build args.
+The domain needs two records in the yeterly.ai hosted zone in Route 53, and the certificate is issued by Azure for free.
 
-## DNS: job191.yeterly.ai in Route 53
+1. In Azure, add the custom domain `job191.yeterly.ai` to the web container app. Azure shows a domain verification code.
+2. In Route 53, add the two records below.
+3. Back in Azure, bind the domain with a managed certificate. Azure renews it automatically.
+4. Set `APP_ORIGIN` and the Auth.js URL to `https://job191.yeterly.ai`, and register the callback URLs with Google and GitHub.
 
-1. Add the custom domain `job191.yeterly.ai` to the `web` container app. Azure shows a
-   domain verification ID.
-2. In the `yeterly.ai` hosted zone:
-   - `TXT  asuid.job191.yeterly.ai` = the verification ID
-   - `CNAME job191.yeterly.ai` = `<web-app>.<environment>.<region>.azurecontainerapps.io`
-3. Bind Azure's free managed certificate to the domain.
-4. Set `APP_ORIGIN=https://job191.yeterly.ai` and register the OAuth callbacks above.
+| Type | Name | Value | TTL |
+| --- | --- | --- | --- |
+| TXT | `asuid.job191.yeterly.ai` | the verification code from Azure | 300 |
+| CNAME | `job191.yeterly.ai` | `<web app>.<environment>.<region>.azurecontainerapps.io` | 300 |
 
-## Order of work
+No DNS hosting moves to Azure, and no other yeterly.ai record changes.
 
-| Step | Work | Estimate |
-|---|---|---|
-| 1 | Azure resources as Bicep or Terraform in this repo | 0.5–1 day |
-| 2 | Plain-Postgres migrations and the data layer | 2–3 days |
-| 3 | Auth.js sign-in, GitHub linking, token storage | 2 days |
-| 4 | CI/CD, custom domain and certificate, staging check | 1 day |
-| 5 | Replace `RAILWAY_DEPLOY.md` / `docs/CSE115A_APP.md` setup with an Azure guide; go live | 0.5 day |
+## Rollout
 
-Staging check: sign in with a `@stu.istinye.edu.tr` account and an admin account, join with
-a course code, link GitHub, add two PRs, submit, let the worker grade, release as instructor.
+Five phases, about 7 to 10 developer days in total. Each phase ends with a check that has to pass before the next one starts.
 
-## Open decisions
+1. **Infrastructure as code (about 1 day).** Bicep in the repo for the resource group, registry, Container Apps environment, Postgres, Key Vault and Log Analytics. A GitHub Actions workflow logs in to Azure with OIDC, builds the image and deploys it. *Check:* the current UI-only build runs on the Azure URL and `/api/health` returns 200.
+2. **Plain Postgres and data layer (2 to 3 days).** Port the migrations, add Kysely and replace the supabase-js calls area by area, keeping the existing tests green. *Check:* all dashboard tests pass, and a local run against Postgres in Docker can create a course and a course code.
+3. **Auth.js sign-in (about 2 days).** Google and GitHub providers, the allow list in the `signIn` callback, GitHub token storage, and removing Supabase from `middleware.ts` and the callback route. *Check:* a `@stu.istinye.edu.tr` account and one admin account sign in, and an outside account is refused.
+4. **Domain and staging run (about 1 day).** Add the Route 53 records, bind the certificate, and set the OAuth callback URLs. *Check:* a full pass on `https://job191.yeterly.ai`. Sign in, link GitHub, add two PRs, submit, let the worker grade, then release as an instructor.
+5. **Go live (half a day).** Create the Job191 course record and course code, add staff, replace the Railway and UCSC setup docs with an Azure guide, and fill `<APP_URL>` in the student instructions. *Check:* the first real student submission goes through.
 
-1. Do `@stu.istinye.edu.tr` accounts work with Google sign-in (Google Workspace), or are
-   they Microsoft 365?
-2. Azure subscription, region and resource group. Is `yeterly.ai` already a hosted zone in
-   Route 53?
-3. Auth.js with Kysely or Drizzle (recommended), or Microsoft Entra External ID for auth.
+## Open questions and risks
+
+- [ ] **Student accounts:** are `@stu.istinye.edu.tr` accounts Google Workspace or Microsoft 365? This decides the sign-in provider.
+- [ ] **Azure:** which subscription and resource group, and is Germany West Central acceptable? Azure has no Turkey region. A European region keeps latency low, but KVKK rules on transferring student data abroad should be confirmed.
+- [ ] **Route 53:** is yeterly.ai already a hosted zone there, and who can add records?
+- [ ] **Grader model:** keep OpenAI `gpt-4o` with a Yeterly key, or move to Azure OpenAI? Azure OpenAI keeps data in the same tenant but needs a small client change.
+- [ ] **Research consent and benchmark export:** the consent text is still a UCSC IRB placeholder. Export stays off until Istinye-approved wording is in place.
+
+- **Risk, private repositories:** students must grant the GitHub OAuth app access to their team's organization, or the app cannot read their pull requests. The student instructions should say this.
+- **Risk, cold starts:** analysis clones each repository into the container. Keep at least one web replica running, and size it at 1 vCPU and 2 GiB to begin with.
