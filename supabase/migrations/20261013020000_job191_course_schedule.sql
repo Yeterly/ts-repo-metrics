@@ -1,6 +1,15 @@
--- Job191 (Istinye University, Fall 2026): the course row, its four two-week sprints, and retiring the CSE 115A seed course.
+-- Job191 (Istinye University, Fall 2026): the course row, its four two-week sprints, and removing the CSE 115A seed course.
 -- Sprints start Monday 2026-10-05; each is due Sunday 23:59:59.999999 Istanbul time.
 
+-- The CSE 115A seed course from 20260924000000 is removed when nothing uses it (deleting a course cascades to its data),
+-- and only deactivated otherwise.
+delete from public.cse_courses c
+where c.slug = 'CSE115A-Fall26'
+  and not exists (select 1 from public.cse_course_memberships m where m.course_id = c.id)
+  and not exists (select 1 from public.cse_course_codes k where k.course_id = c.id)
+  and not exists (select 1 from public.cse_course_roles r where r.course_id = c.id)
+  and not exists (select 1 from public.cse_task_submissions t where t.course_id = c.id)
+  and not exists (select 1 from public.cse_assignment_submissions s where s.course_id = c.id);
 update public.cse_courses set active = false where slug = 'CSE115A-Fall26';
 
 insert into public.cse_courses (slug, title, term, assignment_count, active)
