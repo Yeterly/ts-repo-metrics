@@ -55,11 +55,14 @@ export function lockedAssignmentMessage(assignmentNumber: number): string {
 export type CourseRole = "instructor" | "ta";
 export type StaffCourse = Course & { role: CourseRole };
 
-/** Courses where this email is an instructor or TA. Admins (`CSE115A_ADMIN_EMAILS`) are instructors on every course. */
+/**
+ * Active courses where this email is an instructor or TA. Admins (`CSE115A_ADMIN_EMAILS`) are instructors on every
+ * active course. Inactive courses are hidden from staff, as they are from students.
+ */
 export async function getStaffCourses(email: string): Promise<StaffCourse[]> {
   const db = getSupabase();
   if (isCourseAdminEmail(email)) {
-    const { data: courses, error } = await db.from("cse_courses").select("id,slug,title,term,assignment_count,active");
+    const { data: courses, error } = await db.from("cse_courses").select("id,slug,title,term,assignment_count,active").eq("active", true);
     if (error) throw new Error("Could not load courses.");
     return (courses ?? []).map((course) => ({ ...course, role: "instructor" })) as StaffCourse[];
   }
@@ -67,7 +70,7 @@ export async function getStaffCourses(email: string): Promise<StaffCourse[]> {
   if (error) throw new Error("Could not check course staff.");
   if (!roles?.length) return [];
   const { data: courses, error: courseError } = await db.from("cse_courses")
-    .select("id,slug,title,term,assignment_count,active").in("id", roles.map((row) => row.course_id));
+    .select("id,slug,title,term,assignment_count,active").in("id", roles.map((row) => row.course_id)).eq("active", true);
   if (courseError) throw new Error("Could not load courses.");
   return (courses ?? []).map((course) => ({ ...course, role: roles.find((row) => row.course_id === course.id)!.role })) as StaffCourse[];
 }
