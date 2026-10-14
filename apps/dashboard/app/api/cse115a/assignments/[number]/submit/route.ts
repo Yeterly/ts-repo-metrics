@@ -57,7 +57,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ num
     if (error.message.includes("tasks_changed")) {
       return NextResponse.json({ error: "Your tasks changed while submitting. Check them and submit again." }, { status: 409 });
     }
-    return NextResponse.json({ error: "Could not submit this assignment." }, { status: 500 });
+    return NextResponse.json({ error: "Could not submit this sprint." }, { status: 500 });
   }
   return NextResponse.json({ assignmentSubmission: data });
 }

@@ -27,7 +27,7 @@ async function context(params: Params, body: SubmissionBody) {
   const assignmentNumber = Number(number);
   const slug = typeof body.courseSlug === "string" ? body.courseSlug : "";
   const course = await getEnrolledCourse(identity.userId, slug);
-  if (!course) return { error: NextResponse.json({ error: "Join this course before submitting an assignment." }, { status: 403 }) };
+  if (!course) return { error: NextResponse.json({ error: "Join this course before submitting a sprint task." }, { status: 403 }) };
   if (!Number.isInteger(assignmentNumber) || assignmentNumber < 1 || assignmentNumber > course.assignment_count) {
     return { error: NextResponse.json({ error: "Invalid assignment number." }, { status: 400 }) };
   }

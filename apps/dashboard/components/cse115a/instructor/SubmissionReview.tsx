@@ -228,7 +228,7 @@ export function SubmissionReview({ id }: { id: string }) {
       <Link href={`/cse115a/instructor?course=${encodeURIComponent(course.slug)}&assignment=${submission.assignment_number}`} className="text-sm font-medium text-primary underline">← Submissions</Link>
       <div className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-border bg-card p-5">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary">{course.title} · {course.term} · Assignment {submission.assignment_number}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary">{course.title} · {course.term} · Sprint {submission.assignment_number}</p>
           <h1 className="mt-1 text-2xl font-semibold">{submission.email ?? "Unknown student"}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Attempt {submission.attempt} · submitted {new Date(submission.submitted_at).toLocaleString()} · {active ? STATUS_LABELS[submission.status] : `Unlocked: ${submission.unlock_reason}`}

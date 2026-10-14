@@ -183,13 +183,13 @@ export async function POST(request: NextRequest) {
     }
     if (courseIdVal === "CSE115A-Fall26" && !managedCourse) {
       return NextResponse.json(
-        { error: `Join ${COURSE_SHORT_NAME} with your course code before analyzing an assignment.`, code: "course_membership_required" },
+        { error: `Join ${COURSE_SHORT_NAME} with your course code before analyzing a sprint task.`, code: "course_membership_required" },
         { status: 403 },
       );
     }
     if (courseIdVal && (managedCourse || CSE115A_FALL_COURSE_IDS.has(courseIdVal)) && !verifiedUcscGoogleEmail(authUser)) {
       return NextResponse.json(
-        { error: "Sign in with your Istinye University Microsoft account before analyzing this assignment.", code: "ucsc_google_required" },
+        { error: "Sign in with your Istinye University Microsoft account before analyzing this sprint task.", code: "ucsc_google_required" },
         { status: 403 },
       );
     }

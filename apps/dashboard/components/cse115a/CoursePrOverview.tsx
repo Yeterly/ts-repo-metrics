@@ -51,7 +51,7 @@ export function CoursePrOverview({ task, report, children }: { task?: CourseTask
   return (
     <div className="space-y-6">
       <header className="space-y-3">
-        <p className="text-sm text-muted-foreground">Assignment task · {task.taskId}</p>
+        <p className="text-sm text-muted-foreground">Sprint task · {task.taskId}</p>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{pull?.title ?? task.spec.title} <span className="font-normal text-muted-foreground">#{prNumber}</span></h1>
         <div className="flex flex-wrap items-center gap-3 text-sm">
           <span className={`rounded-full px-3 py-1 font-semibold ${merged ? "bg-purple-600 text-white" : "bg-muted text-foreground"}`}>{merged ? "Merged" : "PR status needs review"}</span>

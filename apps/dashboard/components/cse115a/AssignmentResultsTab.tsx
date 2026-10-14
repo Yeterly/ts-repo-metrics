@@ -59,7 +59,7 @@ export function AssignmentResultsTab({ task }: { task: CourseTaskEvidence }) {
   return (
     <div className="space-y-6">
       <div className="rounded-xl border border-border bg-card p-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-primary">Assignment results</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-primary">Sprint results</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="text-2xl font-semibold text-foreground">{task.taskId}</h2>
@@ -87,7 +87,7 @@ export function AssignmentResultsTab({ task }: { task: CourseTaskEvidence }) {
         </div>
         <div className="rounded-xl border border-border bg-card p-5">
           <p className="text-sm font-semibold text-foreground">Sprint score</p>
-          <p className="mt-1 text-sm text-muted-foreground">Average of the two best task scores. A missing task scores 0. {grade ? "See the assignment page for your sprint score." : "The score appears after your instructor releases grades."}</p>
+          <p className="mt-1 text-sm text-muted-foreground">The average of your two task scores. A missing task scores 0. {grade ? "See the Sprints page for your sprint score." : "The score appears after your instructor releases grades."}</p>
         </div>
       </div>
 
@@ -122,7 +122,7 @@ export function AssignmentResultsTab({ task }: { task: CourseTaskEvidence }) {
           })}
         </div>
       </div>
-      <a href={COURSE_INSTRUCTIONS_URL} target="_blank" rel="noopener noreferrer" className="inline-block text-sm text-primary underline">Read the full assignment rubric</a>
+      <a href={COURSE_INSTRUCTIONS_URL} target="_blank" rel="noopener noreferrer" className="inline-block text-sm text-primary underline">Read the full task rubric</a>
     </div>
   );
 }

@@ -59,8 +59,8 @@ export default async function Cse115aTaskMetricsPage({ params }: Params) {
   return (
     <div className="w-full max-w-6xl space-y-5 py-6">
       <div className="flex flex-wrap items-center gap-3 text-sm">
-        <Link href="/cse115a/dashboard" className="font-medium text-primary underline">← Back to assignments</Link>
-        <span className="text-muted-foreground">{courseRow.title} · {courseRow.term} · Assignment {assignmentNumber} · Task {taskSlot}</span>
+        <Link href="/cse115a/dashboard" className="font-medium text-primary underline">← Back to sprints</Link>
+        <span className="text-muted-foreground">{courseRow.title} · {courseRow.term} · Sprint {assignmentNumber} · Task {taskSlot}</span>
       </div>
       <ResultsDashboard report={report} resultId={analysis.result_id} courseTask={{
         taskId: task.task_id,

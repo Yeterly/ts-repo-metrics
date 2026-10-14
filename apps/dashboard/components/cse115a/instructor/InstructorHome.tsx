@@ -105,9 +105,9 @@ export function InstructorHome() {
           </select>
         </label>
         <label className="text-sm">
-          <span className="mb-1 block text-muted-foreground">Assignment</span>
+          <span className="mb-1 block text-muted-foreground">Sprint</span>
           <select value={assignment} onChange={(event) => select({ assignment: Number(event.target.value) })} className="rounded-lg border border-input bg-background px-3 py-2">
-            {Array.from({ length: course?.assignment_count ?? 1 }, (_, index) => index + 1).map((number) => <option key={number} value={number}>Assignment {number}</option>)}
+            {Array.from({ length: course?.assignment_count ?? 1 }, (_, index) => index + 1).map((number) => <option key={number} value={number}>Sprint {number}</option>)}
           </select>
         </label>
         <label className="text-sm">

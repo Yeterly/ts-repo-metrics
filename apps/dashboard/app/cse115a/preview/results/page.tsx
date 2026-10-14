@@ -33,7 +33,7 @@ export default async function Cse115aPreviewResultsPage({ searchParams }: { sear
   return (
     <div className="w-full max-w-6xl space-y-5 py-6">
       <div className="rounded-md border border-border bg-muted p-5 text-foreground">
-        <Link href="/cse115a/preview" className="text-sm font-medium text-primary underline">← Back to assignment preview</Link>
+        <Link href="/cse115a/preview" className="text-sm font-medium text-primary underline">← Back to sprint preview</Link>
         <h1 className="mt-3 text-xl font-semibold">Example Repo Metrics dashboard</h1>
         <p className="mt-1 text-sm text-muted-foreground">This is a saved analysis of the Repo Metrics repository so you can explore the tabs. It is demo data, not the example task PR. Real student results use the exact PR they submitted.</p>
       </div>

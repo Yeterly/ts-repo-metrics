@@ -94,7 +94,7 @@ export function CourseSetup(props: CourseSetupProps) {
 
                 {state === "current" && step.key === "course" ? (
                   <form className="mt-2" noValidate onSubmit={(event) => { event.preventDefault(); props.onJoin(); }}>
-                    <p id="course-code-hint" className="text-sm text-muted-foreground">Your instructor posts it on Canvas.</p>
+                    <p id="course-code-hint" className="text-sm text-muted-foreground">Your instructor shares it with the class.</p>
                     <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                       <label htmlFor="course-code" className="sr-only">Course code</label>
                       <Input id="course-code" value={props.joinCode} onChange={(event) => props.onJoinCodeChange(event.target.value)}

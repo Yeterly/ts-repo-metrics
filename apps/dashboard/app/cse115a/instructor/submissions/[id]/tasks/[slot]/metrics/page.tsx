@@ -29,7 +29,7 @@ export default async function Cse115aStaffTaskMetricsPage({ params }: Params) {
     <div className="w-full max-w-6xl space-y-5 py-6">
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <Link href={`/cse115a/instructor/submissions/${id}`} className="font-medium text-primary underline">← Back to review</Link>
-        <span className="text-muted-foreground">{course.title} · {course.term} · Assignment {submission.assignment_number} · Task {task.slot}</span>
+        <span className="text-muted-foreground">{course.title} · {course.term} · Sprint {submission.assignment_number} · Task {task.slot}</span>
       </div>
       <ResultsDashboard report={report} resultId={analysis.result_id} courseTask={{
         taskId: task.taskId,
