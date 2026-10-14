@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { CourseSiteProvider } from "@/components/cse115a/CourseSiteContext";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Cse115aMain } from "@/components/cse115a/Cse115aMain";
 import { Cse115aFooter } from "@/components/cse115a/Cse115aFooter";
@@ -40,25 +41,27 @@ export default function RootLayout({
       <body
         className={`${geistMono.variable} font-sans antialiased min-h-screen flex flex-col`}
       >
-        <ThemeProvider>
-          <HideOnCse115aLanding>
-            <Header />
-          </HideOnCse115aLanding>
-          {cse115aSite ? (
-            <Cse115aMain><TooltipProvider>{children}</TooltipProvider></Cse115aMain>
-          ) : (
-            <main className="flex-1 flex flex-col items-center justify-start py-6 px-4 sm:px-6 min-h-[calc(100vh-4rem)] bg-background">
-              <TooltipProvider>{children}</TooltipProvider>
-            </main>
-          )}
-          {cse115aSite ? null : (
+        <CourseSiteProvider courseSite={cse115aSite}>
+          <ThemeProvider>
             <HideOnCse115aLanding>
-              <SiteFooter />
+              <Header />
             </HideOnCse115aLanding>
-          )}
-          <Cse115aFooter />
-          <Toaster richColors position="top-center" />
-        </ThemeProvider>
+            {cse115aSite ? (
+              <Cse115aMain><TooltipProvider>{children}</TooltipProvider></Cse115aMain>
+            ) : (
+              <main className="flex-1 flex flex-col items-center justify-start py-6 px-4 sm:px-6 min-h-[calc(100vh-4rem)] bg-background">
+                <TooltipProvider>{children}</TooltipProvider>
+              </main>
+            )}
+            {cse115aSite ? null : (
+              <HideOnCse115aLanding>
+                <SiteFooter />
+              </HideOnCse115aLanding>
+            )}
+            <Cse115aFooter />
+            <Toaster richColors position="top-center" />
+          </ThemeProvider>
+        </CourseSiteProvider>
       </body>
     </html>
   );

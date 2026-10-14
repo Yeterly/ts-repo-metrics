@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useCoursePathname } from "@/components/cse115a/CourseSiteContext";
 import { createUserSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { isBrowserSupabaseConfigured } from "@/lib/supabase/browserConfigured";
 import { COURSE_SHORT_NAME } from "@/lib/courseUcscAuth";
 
 export function Cse115aHeader() {
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = useCoursePathname();
   const resultsPage = pathname === "/cse115a/preview" || pathname === "/cse115a/dashboard" || pathname === "/cse115a/preview/results" || /^\/cse115a\/assignments\/\d+\/tasks\/[12]\/metrics$/.test(pathname) || pathname.startsWith("/cse115a/instructor");
   const [signedIn, setSignedIn] = useState(false);
   const [staff, setStaff] = useState(false);

@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import { existsSync } from "node:fs";
 import path from "node:path";
+import { COURSE_SECTIONS } from "./lib/cse115a/coursePath";
 
 /**
  * Monorepo root (directory that contains `packages/engine`), regardless of whether
@@ -26,7 +27,7 @@ const outputFileTracingRoot = resolveMonorepoRoot();
  * `/dashboard` serves `app/cse115a/dashboard`, and old `/cse115a/...` links redirect there.
  */
 const cse115aSite = process.env.CSE115A_SITE === "true";
-const COURSE_SECTIONS = "assignments|dashboard|instructor|preview|signin|signup";
+const COURSE_SECTION_PATTERN = COURSE_SECTIONS.join("|");
 
 const nextConfig: NextConfig = {
   output: "standalone",
@@ -58,7 +59,7 @@ const nextConfig: NextConfig = {
     return {
       beforeFiles: [
         { source: "/", destination: "/cse115a" },
-        { source: `/:section(${COURSE_SECTIONS})/:path*`, destination: "/cse115a/:section/:path*" },
+        { source: `/:section(${COURSE_SECTION_PATTERN})/:path*`, destination: "/cse115a/:section/:path*" },
       ],
       afterFiles: [],
       fallback: [],

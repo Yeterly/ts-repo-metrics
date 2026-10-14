@@ -1,11 +1,11 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { useCoursePathname } from "@/components/cse115a/CourseSiteContext";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const cse115a = pathname.startsWith("/cse115a");
+  // Course pages are designed for the light theme only.
+  const cse115a = useCoursePathname().startsWith("/cse115a");
   return (
     <NextThemesProvider
       attribute="class"
