@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { isTestPath, parseDiffFiles, splitPatch } from "@/lib/cse115a/diff";
 import { gradeProcess, gradeTestsPass } from "@/lib/cse115a/grader/deterministic";
-import { buildMessages, GRADE_SCHEMA, graderInput, graderTemperature, quoteFound, normalizeForQuote, type ChatClient } from "@/lib/cse115a/grader/llmGrader";
+import { buildMessages, GRADE_SCHEMA, graderInput, graderTemperature, quoteFound, normalizeForQuote, SYSTEM_PROMPT, type ChatClient } from "@/lib/cse115a/grader/llmGrader";
+import { COURSE_NAME } from "@/lib/courseUcscAuth";
 import { gradeTask } from "@/lib/cse115a/grader/gradeTask";
 import { RUBRIC, TASK_POINTS } from "@/lib/cse115a/rubric";
 import type { TaskSnapshot } from "@/lib/cse115a/submissionSnapshot";
@@ -67,13 +68,13 @@ function snapshot(overrides: Partial<TaskSnapshot> = {}): TaskSnapshot {
   };
 }
 
-function fakeClient(content: unknown): ChatClient & { calls: unknown[] } {
+function fakeClient(content: unknown, model?: string): ChatClient & { calls: unknown[] } {
   const calls: unknown[] = [];
   return {
     calls,
     chat: { completions: { async create(params) {
       calls.push(params);
-      return { choices: [{ message: { content: typeof content === "string" ? content : JSON.stringify(content) } }] };
+      return { model, choices: [{ message: { content: typeof content === "string" ? content : JSON.stringify(content) } }] };
     } } },
   };
 }
@@ -182,7 +183,16 @@ describe("LLM grader", () => {
     // Scope 1 + Specs 1 + AC 2 + Tests section 1 + Test quality 0.5 + Tests pass 2 + Process 1
     expect(grade.agentTotal).toBe(8.5);
     expect(grade.needsReview).toBe(false);
-    expect(grade.promptVersion).toBe("cse115a-grader-v1");
+    expect(grade.promptVersion).toBe("cse115a-grader-v2");
+  });
+
+  it("records the model that answered, not the deployment name", async () => {
+    expect((await gradeTask(fakeClient(GOOD, "gpt-5.6-luna-2026-07-09"), snapshot(), "grader")).model).toBe("gpt-5.6-luna-2026-07-09");
+    expect((await gradeTask(fakeClient(GOOD), snapshot(), "gpt-4o")).model).toBe("gpt-4o");
+  });
+
+  it("names the course in the instructions", () => {
+    expect(SYSTEM_PROMPT).toContain(`course (${COURSE_NAME})`);
   });
 
   it("flags criteria whose quotes are missing or invented", async () => {

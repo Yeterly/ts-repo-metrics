@@ -1,4 +1,5 @@
 import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat/completions";
+import { COURSE_NAME } from "@/lib/courseUcscAuth";
 import { LLM_CRITERIA, criterion, pointsFor, type CriterionGrade, type Level } from "@/lib/cse115a/rubric";
 import { splitPatch } from "@/lib/cse115a/diff";
 import type { TaskSnapshot } from "@/lib/cse115a/submissionSnapshot";
@@ -7,7 +8,7 @@ import type { TaskSnapshot } from "@/lib/cse115a/submissionSnapshot";
 // Every criterion must quote its evidence; a quote that does not appear in the
 // submission (or no quote at all) marks the criterion for instructor review.
 
-export const GRADER_PROMPT_VERSION = "cse115a-grader-v1";
+export const GRADER_PROMPT_VERSION = "cse115a-grader-v2";
 export const DEFAULT_GRADER_MODEL = "gpt-4o";
 
 const MAX_SPEC_CHARS = 20_000;
@@ -19,6 +20,7 @@ export type ChatClient = {
   chat: {
     completions: {
       create(params: ChatCompletionCreateParamsNonStreaming): PromiseLike<{
+        model?: string;
         choices: Array<{ message: { content: string | null; refusal?: string | null } }>;
       }>;
     };
@@ -63,7 +65,7 @@ Look at: ${row.evidence}
   }).join("\n\n");
 }
 
-export const SYSTEM_PROMPT = `You grade one task from a university software engineering course (CSE 115A).
+export const SYSTEM_PROMPT = `You grade one task from a university software engineering course (${COURSE_NAME}).
 A student wrote a task spec (Markdown), then implemented it with tests in a merged pull request.
 Score each criterion below as "full", "partial", or "none", using only the material provided.
 
@@ -168,7 +170,9 @@ export async function gradeWithLlm(client: ChatClient, task: TaskSnapshot, model
   } catch {
     throw new Error("The grader returned invalid JSON.");
   }
-  return { criteria: toCriterionGrades(raw, input), model, promptVersion: GRADER_PROMPT_VERSION };
+  // The model that actually answered: for an Azure AI Foundry deployment name such as "grader",
+  // the response names the underlying model and version, so grades record what produced them.
+  return { criteria: toCriterionGrades(raw, input), model: response.model?.trim() || model, promptVersion: GRADER_PROMPT_VERSION };
 }
 
 export function graderModel(): string {
