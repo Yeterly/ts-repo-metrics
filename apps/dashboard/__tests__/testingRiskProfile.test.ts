@@ -25,7 +25,8 @@ function structuralRiskText(r: RepoReport): string {
       createElement(TestingMetricsTab, { report: r, scopeId: COMMIT_HABITS_SCOPE_TEAM, onScopeIdChange: () => {} }),
     ),
   );
-  const text = html.replace(/<[^>]+>/g, "");
+  // Drop tags, then any stray angle brackets, to read the visible text.
+  const text = html.replace(/<[^>]+>/g, "").replace(/[<>]/g, "");
   return text.slice(text.indexOf("Structural risk score"), text.indexOf("Verification score"));
 }
 
