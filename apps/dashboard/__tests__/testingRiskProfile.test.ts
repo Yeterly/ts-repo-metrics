@@ -16,6 +16,18 @@ function report(highComplexityFunctions: number, longFunctions: number, highComp
   } as unknown as RepoReport;
 }
 
+/** Text outside tags. A character scan, not a regex replace, so CodeQL does not read it as HTML sanitization. */
+function visibleText(html: string): string {
+  let out = "";
+  let inTag = false;
+  for (const ch of html) {
+    if (ch === "<") inTag = true;
+    else if (ch === ">") inTag = false;
+    else if (!inTag) out += ch;
+  }
+  return out;
+}
+
 /** Visible text of the structural risk half of "Your risk profile". */
 function structuralRiskText(r: RepoReport): string {
   const html = renderToStaticMarkup(
@@ -25,8 +37,7 @@ function structuralRiskText(r: RepoReport): string {
       createElement(TestingMetricsTab, { report: r, scopeId: COMMIT_HABITS_SCOPE_TEAM, onScopeIdChange: () => {} }),
     ),
   );
-  // Drop tags, then any stray angle brackets, to read the visible text.
-  const text = html.replace(/<[^>]+>/g, "").replace(/[<>]/g, "");
+  const text = visibleText(html);
   return text.slice(text.indexOf("Structural risk score"), text.indexOf("Verification score"));
 }
 
