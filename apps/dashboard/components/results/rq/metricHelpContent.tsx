@@ -572,7 +572,7 @@ export function TestingConceptRiskTierBody() {
       </HelpSection>
       <HelpSection title="Dot colors">
         <p>
-          Critical / high / medium / low are buckets derived from complexity and the analyzer&apos;s risk
+          Critical / high / medium / low are buckets derived from the analyzer&apos;s risk
           score. Use them to prioritize reviews and targeted tests, especially for dots in lower proximity
           bands.
         </p>
