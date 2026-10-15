@@ -26,6 +26,8 @@ interface TestingRiskQuadrantProps {
   structuralRiskSignals?: {
     highComplexityFunctions: number;
     longFunctions: number;
+    /** Functions in either count, each counted once; absent in older reports. */
+    highComplexityOrLongFunctions?: number;
   };
   /** Snapshot test LOC ÷ source LOC (0–1), same basis as verification score. */
   testLocShare?: number;
@@ -168,6 +170,8 @@ interface TestingRiskQuadrantInnerProps {
   structuralRiskSignals?: {
     highComplexityFunctions: number;
     longFunctions: number;
+    /** Functions in either count, each counted once; absent in older reports. */
+    highComplexityOrLongFunctions?: number;
   };
   testLocShare?: number;
   roomy: boolean;
@@ -197,7 +201,8 @@ function TestingRiskQuadrantInner({
 
   const riskRaw =
     structuralRiskSignals != null
-      ? structuralRiskSignals.highComplexityFunctions + structuralRiskSignals.longFunctions
+      ? (structuralRiskSignals.highComplexityOrLongFunctions ??
+        structuralRiskSignals.highComplexityFunctions + structuralRiskSignals.longFunctions)
       : null;
   const riskFootnote =
     structuralRiskSignals != null && riskRaw != null ? (
@@ -205,8 +210,9 @@ function TestingRiskQuadrantInner({
         From <span className="tabular-nums text-[#a1a1a1]">{structuralRiskSignals.highComplexityFunctions}</span>{" "}
         high-complexity +{" "}
         <span className="tabular-nums text-[#a1a1a1]">{structuralRiskSignals.longFunctions}</span> long functions (
-        <span className="tabular-nums text-[#a1a1a1]">{riskRaw}</span> combined). Score is that count ÷ 20, capped
-        at 100%.
+        <span className="tabular-nums text-[#a1a1a1]">{riskRaw}</span>{" "}
+        {structuralRiskSignals.highComplexityOrLongFunctions != null ? "distinct" : "combined"}). Score is that count ÷
+        20, capped at 100%.
       </p>
     ) : null;
 

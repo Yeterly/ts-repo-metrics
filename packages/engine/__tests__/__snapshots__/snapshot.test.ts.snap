@@ -53,6 +53,7 @@ exports[`analyzeRepo snapshot > produces stable report structure for fixture rep
   },
   "git": null,
   "gitMetricsV2": null,
+  "highComplexityOrLongFunctions": 0,
   "maintainability": {
     "classification": "high",
     "score": 87.5,
