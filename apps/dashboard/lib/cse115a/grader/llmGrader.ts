@@ -8,7 +8,8 @@ import type { TaskSnapshot } from "@/lib/cse115a/submissionSnapshot";
 // Every criterion must quote its evidence; a quote that does not appear in the
 // submission (or no quote at all) marks the criterion for instructor review.
 
-export const GRADER_PROMPT_VERSION = "cse115a-grader-v2";
+// v2 upstream: clearer None wording for Test quality and Tests pass. v3 here: that plus the configured course name.
+export const GRADER_PROMPT_VERSION = "cse115a-grader-v3";
 export const DEFAULT_GRADER_MODEL = "gpt-4o";
 
 const MAX_SPEC_CHARS = 20_000;
