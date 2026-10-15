@@ -172,7 +172,7 @@ describe("LLM grader", () => {
     // Scope 1 + Specs 1 + AC 2 + Tests section 1 + Test quality 0.5 + Tests pass 2 + Process 1
     expect(grade.agentTotal).toBe(8.5);
     expect(grade.needsReview).toBe(false);
-    expect(grade.promptVersion).toBe("cse115a-grader-v1");
+    expect(grade.promptVersion).toBe("cse115a-grader-v2");
   });
 
   it("flags criteria whose quotes are missing or invented", async () => {

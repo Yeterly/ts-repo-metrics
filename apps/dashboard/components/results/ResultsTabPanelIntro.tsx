@@ -79,7 +79,9 @@ function TestingVerificationIntro({
       ? `${totalCommits} commit${totalCommits === 1 ? "" : "s"}`
       : "your commits";
 
-  const needsTestingFocus = pct < 10 || testLocRatio < 0.12;
+  // With no source code, the test/source ratio can't be measured, so only commit coupling counts.
+  const hasSource = mv.sourceLoc > 0;
+  const needsTestingFocus = pct < 10 || (hasSource && testLocRatio < 0.12);
 
   const detailSentence = (() => {
     if (fromGitChurn) {
@@ -120,14 +122,16 @@ function TestingVerificationIntro({
         <p>
           {isContributor ? (
             <>
-              For <strong>{scopeLabel}</strong>, verification signals look healthy on this analysis: their
-              test-activity proxy and share of commits touching tests are in a solid range. Use Core
-              signals below for detail (tree-wide scans still apply where noted).
-            </>
+              For <strong>{scopeLabel}</strong>, verification signals look healthy on this analysis: their{" "}
+              {hasSource
+                ? "test-activity proxy and share of commits touching tests are"
+                : "share of commits touching tests is"}{" "}
+              in a solid range. Use Core signals below for detail (tree-wide scans still apply where noted).            </>
           ) : (
             <>
-              Verification looks healthy relative to {isPrScopedReport(report) ? "this pull request" : "this snapshot"}: test share and commits touching tests are
-              in a solid range. Use Core signals below to spot drift over the next analyses.
+              Verification looks healthy relative to {isPrScopedReport(report) ? "this pull request" : "this snapshot"}:{" "}
+              {hasSource ? "test share and commits touching tests are" : "commits touching tests are"} in a
+              solid range. Use Core signals below to spot drift over the next analyses.
             </>
           )}
         </p>

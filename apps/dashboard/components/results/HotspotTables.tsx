@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/sheet";
 import { FileDetailSheet } from "./FileDetailSheet";
 import { SeverityTableCell } from "./SeverityTableCell";
+import { functionLabel } from "@/lib/functionLabel";
 import { fileStats } from "@/lib/perFileStats";
 import { isPrScopedReport } from "@/lib/analysisScope";
 import type { RepoReport, FunctionDetail, FunctionComplexity, PerFileEntry } from "@/lib/reportTypes";
@@ -153,7 +154,7 @@ export function HotspotTables({ report }: HotspotTablesProps) {
                       setSelectedFunction(row);
                     }}
                   >
-                    <TableCell className="font-medium">{row.name}</TableCell>
+                    <TableCell className="font-medium">{functionLabel(row.name, row.startLine)}</TableCell>
                     <TableCell className="text-muted-foreground truncate max-w-[180px] font-mono text-xs">
                       {row.file}
                     </TableCell>
