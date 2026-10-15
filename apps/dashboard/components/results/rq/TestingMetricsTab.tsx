@@ -97,7 +97,7 @@ export function TestingMetricsTab({ report, scopeId, onScopeIdChange, onOpenCode
   const smells = report.smells;
   const profile = report.profile;
   const testLocRatioForQuadrant =
-    profile && profile.sourceLOC > 0 ? profile.testLOC / profile.sourceLOC : 0;
+    profile && profile.sourceLOC > 0 ? profile.testLOC / profile.sourceLOC : Number.NaN;
 
   const { riskIndex, verificationIndex, riskLabel, verificationLabel } = useMemo(() => {
     const highComplexityCount = complexity?.highComplexityFunctions ?? 0;
@@ -107,7 +107,11 @@ export function TestingMetricsTab({ report, scopeId, onScopeIdChange, onOpenCode
     const riskIndex = Math.min(1, riskRaw / 20);
     const verificationIndex = Math.min(1, testLocRatioForQuadrant * 5);
     const riskLabel: "Low" | "High" = riskRaw >= 10 ? "High" : "Low";
-    const verificationLabel: "Low" | "High" = testLocRatioForQuadrant >= 0.1 ? "High" : "Low";
+    const verificationLabel: "Low" | "High" | null = !Number.isFinite(testLocRatioForQuadrant)
+      ? null
+      : testLocRatioForQuadrant >= 0.1
+        ? "High"
+        : "Low";
     return {
       riskIndex,
       verificationIndex,

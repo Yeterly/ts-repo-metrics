@@ -19,7 +19,8 @@ interface TestingRiskQuadrantProps {
   riskIndex: number;
   verificationIndex: number;
   riskLabel: "Low" | "High";
-  verificationLabel: "Low" | "High";
+  /** Null when there is no source code to measure verification against. */
+  verificationLabel: "Low" | "High" | null;
   /** When true, show that indices come from the whole-repository scan (contributor dropdown does not apply). */
   wholeRepositoryNote?: boolean;
   /** Repo-wide counts backing structural risk (same basis as quadrant). */
@@ -74,8 +75,9 @@ const indexValueClass =
 
 function activePosition(
   riskLabel: "Low" | "High",
-  verificationLabel: "Low" | "High",
-): QuadrantPosition {
+  verificationLabel: "Low" | "High" | null,
+): QuadrantPosition | null {
+  if (verificationLabel === null) return null;
   const lowRisk = riskLabel === "Low";
   const lowVer = verificationLabel === "Low";
   if (lowRisk && lowVer) return "tl";
@@ -84,7 +86,10 @@ function activePosition(
   return "br";
 }
 
-function narrativeForActive(pos: QuadrantPosition): string {
+function narrativeForActive(pos: QuadrantPosition | null): string {
+  if (pos === null) {
+      return "There is no source code in the snapshot, so verification density (test LOC ratio) can't be measured or placed on this chart.";
+  }
   switch (pos) {
     case "tl":
       return "Structural risk is low, but verification density (test LOC ratio) is also low. You have runway—add tests before complexity climbs.";
@@ -97,7 +102,7 @@ function narrativeForActive(pos: QuadrantPosition): string {
   }
 }
 
-function cell(position: QuadrantPosition, active: QuadrantPosition, roomy: boolean) {
+function cell(position: QuadrantPosition, active: QuadrantPosition | null, roomy: boolean) {
   const { title, description } = QUADRANT_COPY[position];
   const isHere = active === position;
   const isIdeal = position === "tr";
@@ -166,7 +171,7 @@ interface TestingRiskQuadrantInnerProps {
   riskIndex: number;
   verificationIndex: number;
   riskLabel: "Low" | "High";
-  verificationLabel: "Low" | "High";
+  verificationLabel: "Low" | "High" | null;
   structuralRiskSignals?: {
     highComplexityFunctions: number;
     longFunctions: number;
@@ -313,7 +318,11 @@ function TestingRiskQuadrantInner({
               <span
                 className={cn(
                   indexValueClass,
-                  verificationLabel === "High" ? "text-[#22c55e]" : "text-[#eab308]",
+                  verificationLabel === "High"
+                   ? "text-[#22c55e]"
+                   : verificationLabel === "Low"
+                    ? "text-[#eab308]"
+                    : "text-[#a1a1a1]",
                 )}
               >
                 {formatScorePercent(verificationIndex)}
@@ -323,10 +332,12 @@ function TestingRiskQuadrantInner({
                   "inline-flex h-5 items-center rounded-lg px-2 text-[10px] font-medium leading-[15px]",
                   verificationLabel === "High"
                     ? "bg-[rgba(34,197,94,0.08)] text-[#22c55e]"
-                    : "border border-[#eab308]/50 bg-[rgba(234,179,8,0.08)] text-[#eab308]",
+                    : verificationLabel === "Low"
+                      ? "border border-[#eab308]/50 bg-[rgba(234,179,8,0.08)] text-[#eab308]"
+                      : "bg-[#262626] text-[#a1a1a1]",
                 )}
               >
-                {verificationLabel} band
+                {verificationLabel ? `${verificationLabel} band` : "No data"}
               </span>
             </div>
             {verificationFootnote}
