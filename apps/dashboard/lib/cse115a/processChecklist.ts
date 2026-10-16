@@ -92,7 +92,7 @@ export function processChecklist(
       ok: Boolean(validation.doneTagOnMergeCommit),
       label: `${id}-done tag on the merge commit`,
       detail: validation.doneTagOnMergeCommit ? null : (merge
-        ? `git tag ${id}-done ${merge} && git push origin ${id}-done`
+        ? `git fetch origin && git tag ${id}-done ${merge} && git push origin ${id}-done`
         : "Push the done tag on the merge commit, then Re-check."),
     },
     {
