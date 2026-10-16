@@ -280,10 +280,14 @@ export function CodeQualityMetricsTab({
               metricCategory="code-quality"
               hideResearchBadge
               description={`Composite maintainability index (0–100-style) when the engine emits it.${hygieneHint}`}
-              tooltip="Repo-level index on 0–100 (Coleman-style composite)."
+              tooltip={
+                isPrScopedReport(report)
+                  ? "Index on 0–100 for the files in this pull request (Coleman-style composite)."
+                  : "Repo-level index on 0–100 (Coleman-style composite)."
+              }
               metricHelp={{
                 title: "Maintainability score",
-                children: <CodeQualityMaintainabilityScoreBody />,
+                children: <CodeQualityMaintainabilityScoreBody prScoped={isPrScopedReport(report)} />,
               }}
             />
             <MetricCard
@@ -295,7 +299,7 @@ export function CodeQualityMetricsTab({
               tooltip="Band from the score: low / moderate / high."
               metricHelp={{
                 title: "Maintainability class",
-                children: <CodeQualityMaintainabilityClassBody />,
+                children: <CodeQualityMaintainabilityClassBody prScoped={isPrScopedReport(report)} />,
               }}
             />
             <MetricCard
