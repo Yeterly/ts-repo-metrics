@@ -5,6 +5,7 @@ import { TestingMetricsTab } from "@/components/results/rq/TestingMetricsTab";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { COMMIT_HABITS_SCOPE_TEAM } from "@/lib/commitHabitsScopeMetrics";
 import type { RepoReport } from "@/lib/reportTypes";
+import { visibleText } from "./helpers/visibleText";
 
 // The risk profile reads only these fields.
 function report(highComplexityFunctions: number, longFunctions: number, highComplexityOrLongFunctions?: number): RepoReport {
@@ -14,18 +15,6 @@ function report(highComplexityFunctions: number, longFunctions: number, highComp
     highComplexityOrLongFunctions,
     profile: { sourceLOC: 100, testLOC: 10 },
   } as unknown as RepoReport;
-}
-
-/** Text outside tags. A character scan, not a regex replace, so CodeQL does not read it as HTML sanitization. */
-function visibleText(html: string): string {
-  let out = "";
-  let inTag = false;
-  for (const ch of html) {
-    if (ch === "<") inTag = true;
-    else if (ch === ">") inTag = false;
-    else if (!inTag) out += ch;
-  }
-  return out;
 }
 
 /** Visible text of the structural risk half of "Your risk profile". */

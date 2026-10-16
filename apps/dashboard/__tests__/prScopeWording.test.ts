@@ -18,6 +18,7 @@ import { COMMIT_HABITS_SCOPE_TEAM } from "@/lib/commitHabitsScopeMetrics";
 import type { Phase2Summary } from "@/lib/phase2Summary";
 import type { RepoReport } from "@/lib/reportTypes";
 import { RESULTS_TAB } from "@/lib/resultsNavigation";
+import { visibleText } from "./helpers/visibleText";
 
 // The tested components read only these fields; `scope` is "pr" when only a pull request's files were analyzed.
 function report(scope?: "pr", overrides: object = {}): RepoReport {
@@ -41,7 +42,7 @@ function verificationText(r: RepoReport): string {
       createElement(TestingMetricsTab, { report: r, scopeId: COMMIT_HABITS_SCOPE_TEAM, onScopeIdChange: () => {} }),
     ),
   );
-  const text = html.replace(/<[^>]+>/g, "");
+  const text = visibleText(html);
   return text.slice(text.indexOf("Verification score"), text.indexOf("Score is 5×"));
 }
 
@@ -61,7 +62,7 @@ describe("Verification footnote scope", () => {
 
 /** Visible text of one element, without HTML tags. */
 function textOf(element: ReactElement): string {
-  return renderToStaticMarkup(createElement(TooltipProvider, null, element)).replace(/<[^>]+>/g, "");
+  return visibleText(renderToStaticMarkup(createElement(TooltipProvider, null, element)));
 }
 
 const MI_SUMMARY = {
