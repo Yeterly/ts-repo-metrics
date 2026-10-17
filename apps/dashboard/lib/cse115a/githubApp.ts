@@ -1,7 +1,6 @@
 import "server-only";
 import { createSign } from "node:crypto";
 import type { User } from "@supabase/supabase-js";
-import { COURSE_SHORT_NAME } from "@/lib/courseUcscAuth";
 import { githubReader, type GitHubReader } from "@/lib/cse115a/githubClient";
 
 // Course repository access through the course's GitHub App. Each team installs the app on its own
@@ -68,7 +67,7 @@ export async function repoInstallationToken(
   const found = await fetchImpl(`${API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/installation`, { headers: auth, cache: "no-store" });
   if (found.status === 404) {
     throw new CourseRepoAccessError(
-      `The ${COURSE_SHORT_NAME} GitHub App is not installed on ${owner}/${repo}. Install it on your team’s repository: ${githubAppInstallUrl(config)}`,
+      `The course GitHub App is not installed on ${owner}/${repo}. Install it on your team’s repository: ${githubAppInstallUrl(config)}`,
       "github_app_not_installed",
     );
   }
