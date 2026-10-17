@@ -32,7 +32,7 @@ function groups(sprint: number): Group[] {
       items: [
         { key: "spec", title: "Write your task file", detail: <>
           <p>Create <Code>{path}</Code> with the six fields: Title, Description, Specs, Requirements, Acceptance criteria, and Tests.</p>
-          <p className="mt-2">Copy the worked example so the front matter and headings match exactly. <Code>sprint:</Code> must be {sprint}.</p>
+          <p className="mt-2">Copy the worked example so the front matter and headings match exactly. <Code>sprint:</Code> must be {sprint}, and <Code>estimate_hours</Code> must be at least 2.</p>
         </> },
         { key: "board", title: "Put it on the Scrum board", detail: <p>Add a card for the task to your team’s board, for example GitHub Projects. The app can’t see your board, so this one is up to you.</p> },
         { key: "branch", title: "Start a branch", detail: <>
@@ -43,16 +43,19 @@ function groups(sprint: number): Group[] {
         { key: "base", title: "Commit the spec first and tag it", detail: <>
           <p>Commit only the task file, tag it, and push, before writing any code:</p>
           <Commands lines={[`git add ${path}`, `git commit -m "<id>: task spec"`, "git tag <id>-base", "git push origin task/<id> <id>-base"]} />
-          <p className="mt-2">This commit must stay first on the branch. Don’t rebase or amend it.</p>
+          <p className="mt-2">This commit must stay first on the branch. Don’t rebase, amend, or force-push it; if you did, the task card shows how to move the tag.</p>
         </> },
       ],
     },
     {
       title: "Build and merge",
       items: [
-        { key: "impl", title: "Build it with tests", detail: <p>Add the code and at least one test for every acceptance criterion, on the same branch. Don’t weaken a test to make it pass.</p> },
-        { key: "pr", title: "Open your pull request", detail: <p>Open it from your own GitHub account, titled <Code>{"<id>: <title>"}</Code>. It should change only this task’s file under <Code>docs/tasks/</Code>.</p> },
-        { key: "merge", title: "Get a review and merge", detail: <p>A teammate reviews it. Merge once your team’s tests pass.</p> },
+        { key: "impl", title: "Build it with tests", detail: <>
+          <p>Add the code and at least one test for every acceptance criterion, on the same branch. Don’t weaken a test to make it pass.</p>
+          <p className="mt-2">Put tests in a <Code>tests/</Code>, <Code>test/</Code>, <Code>__tests__/</Code>, or <Code>spec/</Code> folder, or name them like <Code>*.test.ts</Code>, <Code>*.spec.ts</Code>, <Code>test_*.py</Code>, or <Code>*_test.py</Code>, so the app can find them. Start each test name with the task ID.</p>
+        </> },
+        { key: "pr", title: "Open your pull request", detail: <p>Open it from your own GitHub account, titled <Code>{"<id>: <title>"}</Code>. Within <Code>docs/tasks/</Code> it changes only the task file; changes elsewhere are fine.</p> },
+        { key: "merge", title: "Get a review and merge", detail: <p>A teammate reviews it. Merge once the task’s tests and the existing tests pass.</p> },
         { key: "done", title: "Tag the merge", detail: <>
           <p>Find the merge commit on the PR page (“merged commit <Code>abc1234</Code>”), then:</p>
           <Commands lines={["git fetch origin", "git tag <id>-done <merge commit sha>", "git push origin <id>-done"]} />
