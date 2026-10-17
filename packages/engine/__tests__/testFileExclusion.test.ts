@@ -93,6 +93,14 @@ describe("test file exclusion from complexity metrics", () => {
     });
   }, 30_000);
 
+  it("reports no maintainability index when only test files changed", async () => {
+    await withRepo({ "math.test.ts": MATH_TEST_TS }, async (root) => {
+      const report = await analyzeRepo(root);
+      expect(report.totals.functions).toBe(0);
+      expect(report.maintainability).toBeNull();
+    });
+  });
+
   it("excludes pytest modules the same way", async () => {
     await withRepo({ "util.py": "def f(x):\n    return x\n", "test_util.py": TEST_PY }, async (root) => {
       const report = await analyzeRepo(root);
