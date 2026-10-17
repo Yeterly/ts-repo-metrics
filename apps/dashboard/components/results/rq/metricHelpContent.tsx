@@ -457,7 +457,7 @@ export function TestingTestToFeatureCommitRatioBody() {
   );
 }
 
-export function TestingTestCoverageProxyBody() {
+export function TestingTestCoverageProxyBody({ prScoped = false }: { prScoped?: boolean } = {}) {
   return (
     <>
       <HelpSection title="What it measures">
@@ -470,8 +470,8 @@ export function TestingTestCoverageProxyBody() {
         <FormulaBox>ratio = test LOC ÷ source LOC</FormulaBox>
         <p className="text-muted-foreground text-xs pt-2">
           <strong>low:</strong> ratio &lt; 0.1 · <strong>moderate:</strong> 0.1–0.3 ·{" "}
-          <strong>high:</strong> &gt; 0.3. Always uses the full-repository snapshot (does not follow the
-          per-author churn dropdown).
+          <strong>high:</strong> &gt; 0.3. Always uses the {prScoped ? "pull-request" : "full-repository"} snapshot
+          (does not follow the per-author churn dropdown).
         </p>
       </HelpSection>
     </>

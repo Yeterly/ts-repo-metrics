@@ -220,8 +220,8 @@ export function TestingMetricsTab({ report, scopeId, onScopeIdChange, onOpenCode
           <>
             <p className="text-sm text-muted-foreground max-w-3xl">
               The first metrics in this section use per-author git churn (test vs
-              non-test paths) for your selection. Complexity and the quadrant still describe the whole
-              repository scan.
+              non-test paths) for your selection. Complexity and the quadrant still describe the{" "}
+              {isPrScopedReport(report) ? "pull-request" : "whole repository"} scan.
             </p>
             <p className="text-sm font-medium text-foreground max-w-3xl">
               Note: <strong>% commits touching tests</strong> and{" "}
@@ -298,10 +298,10 @@ export function TestingMetricsTab({ report, scopeId, onScopeIdChange, onOpenCode
               {...cardProps}
               label="Test coverage proxy (snapshot)"
               value={`${formatNumber(report.testCoverageProxy.ratio * 100)}% · ${capitalizeWord(report.testCoverageProxy.classification)}`}
-              tooltip={`Static test LOC ÷ source LOC on the full tree, bucketed low (&lt;10%), moderate (10–30%), high (&gt;30%). Same snapshot for every scope—not author churn. ${locSnapshotTooltip}`}
+              tooltip={`Static test LOC ÷ source LOC on ${isPrScopedReport(report) ? "the files in this PR" : "the full tree"}, bucketed low (&lt;10%), moderate (10–30%), high (&gt;30%). Same snapshot for every scope—not author churn. ${locSnapshotTooltip}`}
               metricHelp={{
                 title: "Test coverage proxy",
-                children: <TestingTestCoverageProxyBody />,
+                children: <TestingTestCoverageProxyBody prScoped={isPrScopedReport(report)} />,
               }}
             />
           ) : null}

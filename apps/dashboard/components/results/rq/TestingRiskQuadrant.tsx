@@ -251,7 +251,7 @@ function TestingRiskQuadrantInner({
           </p>
           {wholeRepositoryNote ? (
             <p className="text-xs font-medium text-amber-200/90">
-              Based on the whole-repository scan; unchanged when you pick a contributor above.
+              Based on the {prScoped ? "pull-request" : "whole-repository"} scan; unchanged when you pick a contributor above.
             </p>
           ) : null}
         </div>

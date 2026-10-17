@@ -85,7 +85,7 @@ export function CodeQualityMetricsTab({
 
   const hygieneHint =
     scope.mode === "contributor" && (scope.pathFilterActive || scope.pathFilterMissing)
-      ? " Full repository snapshot — not limited to this author’s paths."
+      ? ` ${isPrScopedReport(report) ? "Pull-request" : "Full repository"} snapshot — not limited to this author’s paths.`
       : "";
 
   const structuralSubtitle = (() => {
