@@ -263,13 +263,8 @@ export function CourseDashboard({ preview = false, previewState = "draft" }: { p
   const action = submitAction(submissions.length, readyCount, assignmentNumber);
   const setupDone = Boolean(me?.courses.length) && githubConnected === true;
 
-  // Opening a sprint the student has not started shows its checklist, every time.
   function openSprint(number: number) {
     setAssignmentNumber(number);
-    if (!course || !me) return;
-    const started = me.assignmentSubmissions.some((item) => item.course_id === course.id && item.assignment_number === number)
-      || me.submissions.some((item) => item.course_id === course.id && item.assignment_number === number);
-    if (!started) setChecklistOpen(true);
   }
 
   async function signOut() {
@@ -486,7 +481,7 @@ export function CourseDashboard({ preview = false, previewState = "draft" }: { p
                     ? `Graded ${formatWhen(releasedGrades[0]!.releasedAt)} · the average of your two tasks`
                     : assignmentSubmission
                       ? `Submitted ${formatWhen(assignmentSubmission.submitted_at)}. Your grade appears here after instructor review.`
-                      : "Add two merged task PRs. We check each one against the submission checklist."}
+                      : <>Add two merged task PRs. We check each one against the <button type="button" onClick={() => setChecklistOpen(true)} className="text-blue-700 underline">submission checklist</button>.</>}
                 </p>
                 {released ? <p className="mt-1 text-sm text-slate-600">Questions about this grade? Ask your TA.</p> : null}
                 {assignmentSubmission && !released ? <StatusSteps status={assignmentSubmission.status} /> : null}
