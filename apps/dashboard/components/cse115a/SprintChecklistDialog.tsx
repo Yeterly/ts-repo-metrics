@@ -93,8 +93,8 @@ function InfoBubble({ title, children }: { title: string; children: React.ReactN
   );
 }
 
-function storageKey(courseSlug: string, sprint: number) {
-  return `cse115a:checklist:${courseSlug}:${sprint}`;
+function storageKey(courseSlug: string, sprint: number, slot: number) {
+  return `cse115a:checklist:${courseSlug}:${sprint}:${slot}`;
 }
 
 function readTicks(key: string): Record<string, boolean> {
@@ -105,14 +105,15 @@ function readTicks(key: string): Record<string, boolean> {
   }
 }
 
-export function SprintChecklistDialog({ open, onOpenChange, courseSlug, sprint }: {
+export function SprintChecklistDialog({ open, onOpenChange, courseSlug, sprint, slot }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   courseSlug: string;
   sprint: number;
+  slot: number;
 }) {
-  const key = storageKey(courseSlug, sprint);
-  // Ticks are read from storage the first time each sprint's checklist opens.
+  const key = storageKey(courseSlug, sprint, slot);
+  // Ticks are read from storage the first time each task's checklist opens.
   const [saved, setSaved] = useState<{ key: string; ticks: Record<string, boolean> } | null>(null);
   if (open && saved?.key !== key) setSaved({ key, ticks: readTicks(key) });
   const ticks = saved?.key === key ? saved.ticks : {};
@@ -136,10 +137,10 @@ export function SprintChecklistDialog({ open, onOpenChange, courseSlug, sprint }
       <DialogContent className="top-0 left-0 flex h-dvh w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 sm:max-w-none">
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-2xl px-5 py-10 sm:py-14">
-            <p className="text-sm font-medium text-primary">Sprint {sprint}</p>
-            <DialogTitle className="mt-1 text-3xl font-semibold tracking-tight text-foreground">Your sprint checklist</DialogTitle>
+            <p className="text-sm font-medium text-primary">Sprint {sprint} · Task {slot}</p>
+            <DialogTitle className="mt-1 text-3xl font-semibold tracking-tight text-foreground">Your task checklist</DialogTitle>
             <DialogDescription className="mt-3 text-lg text-muted-foreground">
-              Follow these steps for each of your two tasks. Tap <Info className="inline size-4 align-[-2px]" aria-label="the info icon" /> for how to do a step.
+              Follow these steps for each task. Tap <Info className="inline size-4 align-[-2px]" aria-label="the info icon" /> for how to do a step.
             </DialogDescription>
 
             <div className="mt-10 space-y-10">

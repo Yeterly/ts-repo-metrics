@@ -157,7 +157,7 @@ export function CourseDashboard({ preview = false, previewState = "draft" }: { p
   const [joinCode, setJoinCode] = useState("");
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
-  const [checklistOpen, setChecklistOpen] = useState(false);
+  const [checklistSlot, setChecklistSlot] = useState<number | null>(null);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(preview ? previewCourse.slug : null);
   const [assignmentNumber, setAssignmentNumber] = useState(preview && previewState === "needs-fixes" ? 2 : 1);
   const [prInputs, setPrInputs] = useState<Record<number, string>>({});
@@ -263,13 +263,8 @@ export function CourseDashboard({ preview = false, previewState = "draft" }: { p
   const action = submitAction(submissions.length, readyCount, assignmentNumber);
   const setupDone = Boolean(me?.courses.length) && githubConnected === true;
 
-  // Opening a sprint the student has not started shows its checklist, every time.
   function openSprint(number: number) {
     setAssignmentNumber(number);
-    if (!course || !me) return;
-    const started = me.assignmentSubmissions.some((item) => item.course_id === course.id && item.assignment_number === number)
-      || me.submissions.some((item) => item.course_id === course.id && item.assignment_number === number);
-    if (!started) setChecklistOpen(true);
   }
 
   async function signOut() {
@@ -486,7 +481,7 @@ export function CourseDashboard({ preview = false, previewState = "draft" }: { p
                     ? `Graded ${formatWhen(releasedGrades[0]!.releasedAt)} · the average of your two tasks`
                     : assignmentSubmission
                       ? `Submitted ${formatWhen(assignmentSubmission.submitted_at)}. Your grade appears here after instructor review.`
-                      : "Add two merged task PRs. We check each one against the submission checklist."}
+                      : "Add two merged task PRs. We check each one against its checklist."}
                 </p>
                 {released ? <p className="mt-1 text-sm text-slate-600">Questions about this grade? Ask your TA.</p> : null}
                 {assignmentSubmission && !released ? <StatusSteps status={assignmentSubmission.status} /> : null}
@@ -527,7 +522,7 @@ export function CourseDashboard({ preview = false, previewState = "draft" }: { p
                 return (
                   <div key={slot} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div className="flex items-start justify-between gap-3">
-                      <h2 className="text-lg font-semibold">Task {slot}{item ? <span className="font-normal text-slate-500"> · {item.task_id}</span> : null}</h2>
+                      <h2 className="text-lg font-semibold">Task {slot}{item ? <span className="font-normal text-slate-500"> · {item.task_id}</span> : null} <button type="button" onClick={() => setChecklistSlot(slot)} className="ml-2 text-sm font-normal text-blue-700 underline">Checklist</button></h2>
                       {grade ? <span className="text-lg font-semibold tabular-nums">{formatScore(grade.total)}<span className="text-sm font-normal text-slate-500"> / 10</span></span>
                         : item && !locked ? <span className={`text-sm font-semibold ${fixCount === 0 ? "text-emerald-700" : "text-amber-700"}`}>{fixCount === 0 ? "Ready" : `${fixCount} to fix`}</span> : null}
                     </div>
@@ -651,7 +646,7 @@ export function CourseDashboard({ preview = false, previewState = "draft" }: { p
           {consent && !editingConsent ? (
             <p className="text-sm text-slate-600">Research use: {consent.consented ? "your tasks may be included" : "your tasks are kept out"}. <button type="button" onClick={() => setEditingConsent(true)} className="text-blue-700 underline">Change</button></p>
           ) : null}
-          <SprintChecklistDialog open={checklistOpen} onOpenChange={setChecklistOpen} courseSlug={course.slug} sprint={assignmentNumber} />
+          <SprintChecklistDialog open={checklistSlot !== null} onOpenChange={(open) => { if (!open) setChecklistSlot(null); }} courseSlug={course.slug} sprint={assignmentNumber} slot={checklistSlot ?? 1} />
         </>
       ) : null}
     </div>
