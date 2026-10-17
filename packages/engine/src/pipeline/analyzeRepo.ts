@@ -354,8 +354,8 @@ export async function analyzeRepo(
     allComplexities,
     perFile,
   );
-  const maintainability = computeMaintainabilityIndex(
-    complexitySummary.average,
+  // With no functions to measure, the MI formula would report a perfect 100 (#290).
+  const maintainability = totalFunctions === 0 ? null : computeMaintainabilityIndex(    complexitySummary.average,
     profile.sourceLOC,
     functionMetricsSummary.averageLength,
   );
