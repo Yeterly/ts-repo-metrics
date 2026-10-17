@@ -76,8 +76,13 @@ export function CodeQualityMetricsTab({
   const maxNestingDepth = fm?.maxNestingDepth ?? 0;
   const p90FunctionLength = dist?.p90_function_length ?? 0;
   const p90Complexity = dist?.p90_complexity ?? 0;
-  const maintainabilityScore = report.maintainability?.score ?? 0;
+  const noSourceFunctions = report.totals.functions === 0;
+  const maintainabilityScore = report.maintainability ? formatNumber(report.maintainability.score) : "—";
   const maintainabilityClass = report.maintainability?.classification ?? "—";
+  // A PR that changes only test files has nothing to score (#290).
+  const notApplicable = noSourceFunctions && isPrScopedReport(report)
+    ? " This pull request changes only test files, so complexity metrics don't apply."
+    : "";
   const duplicationPercent = report.duplication?.percentage ?? 0;
   const consoleLogCount = baseSmells?.consoleLogs ?? 0;
   const emptyCatchBlocks = baseSmells?.emptyCatchBlocks ?? 0;
@@ -276,10 +281,10 @@ export function CodeQualityMetricsTab({
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <MetricCard
               label="Maintainability score"
-              value={formatNumber(maintainabilityScore)}
+              value={maintainabilityScore}
               metricCategory="code-quality"
               hideResearchBadge
-              description={`Composite maintainability index (0–100-style) when the engine emits it.${hygieneHint}`}
+              description={`Composite maintainability index (0–100-style) when the engine emits it.${notApplicable}${hygieneHint}`}
               tooltip={
                 isPrScopedReport(report)
                   ? "Index on 0–100 for the files in this pull request (Coleman-style composite)."
@@ -295,7 +300,7 @@ export function CodeQualityMetricsTab({
               value={maintainabilityClass}
               metricCategory="code-quality"
               hideResearchBadge
-              description={`Bucket derived from the score—for quick communication, not a grade.${hygieneHint}`}
+              description={`Bucket derived from the score—for quick communication, not a grade.${notApplicable}${hygieneHint}`}
               tooltip="Band from the score: low / moderate / high."
               metricHelp={{
                 title: "Maintainability class",
