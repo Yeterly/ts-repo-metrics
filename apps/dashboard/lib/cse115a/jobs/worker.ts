@@ -1,4 +1,6 @@
 import OpenAI from "openai";
+import { bedrockChatClient } from "@/lib/cse115a/grader/bedrockClient";
+import type { ChatClient } from "@/lib/cse115a/grader/llmGrader";
 import { getSupabase } from "@/lib/supabase/server";
 import { gradeTask } from "@/lib/cse115a/grader/gradeTask";
 import { drainJobs, type JobHandlers } from "./runner";
@@ -10,10 +12,18 @@ import { supabaseJobStore } from "./supabaseStore";
 export const POLL_INTERVAL_MS = 15_000;
 
 /**
- * Azure AI Foundry when AZURE_OPENAI_ENDPOINT is set (CSE115A_GRADER_MODEL is then the
- * deployment name), otherwise OpenAI with OPENAI_API_KEY.
+ * Amazon Bedrock when CSE115A_GRADER_PROVIDER=bedrock (CSE115A_GRADER_MODEL is then a Bedrock
+ * model or inference profile ID, credentials come from the AWS default chain), Azure AI Foundry
+ * when AZURE_OPENAI_ENDPOINT is set (CSE115A_GRADER_MODEL is then the deployment name),
+ * otherwise OpenAI with OPENAI_API_KEY.
  */
-export function graderClient(env: NodeJS.ProcessEnv = process.env): OpenAI {
+export function graderClient(env: NodeJS.ProcessEnv = process.env): ChatClient | OpenAI {
+  if (env.CSE115A_GRADER_PROVIDER?.trim().toLowerCase() === "bedrock") {
+    const region = env.AWS_REGION?.trim() || env.AWS_DEFAULT_REGION?.trim();
+    if (!region) throw new Error("AWS_REGION is not configured for the Bedrock grader.");
+    if (!env.CSE115A_GRADER_MODEL?.trim()) throw new Error("CSE115A_GRADER_MODEL must name a Bedrock model for the Bedrock grader.");
+    return bedrockChatClient(region);
+  }
   const endpoint = env.AZURE_OPENAI_ENDPOINT?.trim();
   if (endpoint) {
     const apiKey = env.AZURE_OPENAI_API_KEY?.trim();
